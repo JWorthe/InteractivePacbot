@@ -13,6 +13,7 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
+    this.load.image('player-a', 'assets/images/player-a.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;
