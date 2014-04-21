@@ -12,13 +12,14 @@ Preload.prototype = {
 
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
+    this.load.image('wall', 'assets/images/wall.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;
   },
   update: function() {
     if(!!this.ready) {
-      this.game.state.start('menu');
+      this.game.state.start('play');
     }
   },
   onLoadComplete: function() {
