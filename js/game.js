@@ -15,13 +15,45 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":3,"./states/gameover":4,"./states/menu":5,"./states/play":6,"./states/preload":7}],2:[function(require,module,exports){
+},{"./states/boot":4,"./states/gameover":5,"./states/menu":6,"./states/play":7,"./states/preload":8}],2:[function(require,module,exports){
+'use strict';
+
+var Player = function(game, x, y, key, frame) {
+  Phaser.Sprite.call(this, game, x, y, key, frame);
+
+  this.moving = false;
+  this.scale = {x: 0.01, y: 0.01};
+};
+
+Player.prototype = Object.create(Phaser.Sprite.prototype);
+Player.prototype.constructor = Player;
+
+Player.prototype.update = function() {  
+};
+
+Player.prototype.move = function(newX, newY) {
+  if (this.moving) {
+    return;
+  }
+
+  this.moving = true;
+  var tween = this.game.add.tween(this).to({x: newX, y: newY}, 500);
+  tween.onComplete.add(this.finishMovement, this);
+  tween.start();
+};
+
+Player.prototype.finishMovement = function() {
+  this.moving = false;
+};
+
+module.exports = Player;
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var Wall = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'wall', frame);
-
-  // initialize your prefab here
+  this.scale = {x: 0.01, y: 0.01};
 };
 
 Wall.prototype = Object.create(Phaser.Sprite.prototype);
@@ -29,7 +61,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -47,7 +79,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 function GameOver() {}
@@ -63,7 +95,7 @@ GameOver.prototype = {
 
 module.exports = GameOver;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 function Menu() {}
@@ -79,63 +111,121 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var Wall = require('../prefabs/wall');
+var Player = require('../prefabs/player');
 
 function Play() {}
 
 Play.prototype = {
+  addToMap: function(x, y) {
+    if (!this.map) {
+      this.map = [];
+    }
+    if (!this.map[x]) {
+      this.map[x] = [];
+    }
+
+    this.map[x][y] = true;
+  },
+  removeFromMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return;
+    }
+    this.map[x][y] = false;
+  },
+  checkMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return false;
+    }
+    return this.map[x][y];
+  },
   preload: function() {
   },
   create: function() {
     this.createWalls();
-//    this.world.scale = {x:0.5, y:0.5};
+    this.world.scale = {x:100, y:100};
+    this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
+    this.game.add.existing(this.playerA);
+    this.addPlayerControls();
   },
   update: function() {
   },
   createWalls: function() {
     this.walls = this.game.add.group();
+
     this.walls.add(new Wall(this.game, 0,0));
-    this.walls.add(new Wall(this.game, 100,0));
-    this.walls.add(new Wall(this.game, 200,0));
-    this.walls.add(new Wall(this.game, 300,0));
-    this.walls.add(new Wall(this.game, 400,0));
-    this.walls.add(new Wall(this.game, 500,0));
-    this.walls.add(new Wall(this.game, 600,0));
-    this.walls.add(new Wall(this.game, 700,0));
+    this.walls.add(new Wall(this.game, 1,0));
+    this.walls.add(new Wall(this.game, 2,0));
+    this.walls.add(new Wall(this.game, 3,0));
+    this.walls.add(new Wall(this.game, 4,0));
+    this.walls.add(new Wall(this.game, 5,0));
+    this.walls.add(new Wall(this.game, 6,0));
+    this.walls.add(new Wall(this.game, 7,0));
 
-    this.walls.add(new Wall(this.game, 0,100));
-    this.walls.add(new Wall(this.game, 700,100));
+    this.walls.add(new Wall(this.game, 0,1));
+    this.walls.add(new Wall(this.game, 7,1));
 
-    this.walls.add(new Wall(this.game, 0,200));
-    this.walls.add(new Wall(this.game, 200,200));
-    this.walls.add(new Wall(this.game, 500,200));
-    this.walls.add(new Wall(this.game, 700,200));
+    this.walls.add(new Wall(this.game, 0,2));
+    this.walls.add(new Wall(this.game, 2,2));
+    this.walls.add(new Wall(this.game, 5,2));
+    this.walls.add(new Wall(this.game, 7,2));
 
-    this.walls.add(new Wall(this.game, 0,300));
-    this.walls.add(new Wall(this.game, 200,300));
-    this.walls.add(new Wall(this.game, 500,300));
-    this.walls.add(new Wall(this.game, 700,300));
+    this.walls.add(new Wall(this.game, 0,3));
+    this.walls.add(new Wall(this.game, 2,3));
+    this.walls.add(new Wall(this.game, 5,3));
+    this.walls.add(new Wall(this.game, 7,3));
 
-    this.walls.add(new Wall(this.game, 0,400));
-    this.walls.add(new Wall(this.game, 700,400));
+    this.walls.add(new Wall(this.game, 0,4));
+    this.walls.add(new Wall(this.game, 7,4));
 
-    this.walls.add(new Wall(this.game, 0,500));
-    this.walls.add(new Wall(this.game, 100,500));
-    this.walls.add(new Wall(this.game, 200,500));
-    this.walls.add(new Wall(this.game, 300,500));
-    this.walls.add(new Wall(this.game, 400,500));
-    this.walls.add(new Wall(this.game, 500,500));
-    this.walls.add(new Wall(this.game, 600,500));
-    this.walls.add(new Wall(this.game, 700,500));
+    this.walls.add(new Wall(this.game, 0,5));
+    this.walls.add(new Wall(this.game, 1,5));
+    this.walls.add(new Wall(this.game, 2,5));
+    this.walls.add(new Wall(this.game, 3,5));
+    this.walls.add(new Wall(this.game, 4,5));
+    this.walls.add(new Wall(this.game, 5,5));
+    this.walls.add(new Wall(this.game, 6,5));
+    this.walls.add(new Wall(this.game, 7,5));
+
+    this.walls.forEach(function(wall) {
+      this.addToMap(wall.x, wall.y);
+    }, this);
+  },
+  addPlayerControls: function() {
+    var controls = {
+      up: Phaser.Keyboard.UP,
+      down: Phaser.Keyboard.DOWN,
+      left: Phaser.Keyboard.LEFT,
+      right: Phaser.Keyboard.RIGHT
+    };
+    this.game.input.keyboard.addKeyCapture([
+      controls.up,
+      controls.down,
+      controls.left,
+      controls.right
+    ]);
+
+    this.game.input.keyboard.addKey(controls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
+    this.game.input.keyboard.addKey(controls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
+    this.game.input.keyboard.addKey(controls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
+    this.game.input.keyboard.addKey(controls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+  },
+  movePlayer: function(player, deltaX, deltaY) {
+    var newX = player.x + deltaX;
+    var newY = player.y + deltaY;
+
+    if (!this.checkMap(newX, newY)) {
+      player.move(newX, newY);
+    }
   }
 };
 
 module.exports = Play;
 
-},{"../prefabs/wall":2}],7:[function(require,module,exports){
+},{"../prefabs/player":2,"../prefabs/wall":3}],8:[function(require,module,exports){
 'use strict';
 
 function Preload() {
@@ -151,6 +241,7 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
+    this.load.image('player-a', 'assets/images/player-a.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;
