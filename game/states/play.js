@@ -2,6 +2,7 @@
 
 var Wall = require('../prefabs/wall');
 var Player = require('../prefabs/player');
+var Pill = require('../prefabs/pill');
 
 function Play() {}
 
@@ -32,7 +33,12 @@ Play.prototype = {
   },
   create: function() {
     this.createWalls();
+    this.createPills();
+
     this.world.scale = {x:100, y:100};
+    this.world.bounds = {x: -50, y:-50, width: this.game.width, height: this.game.height};
+    this.world.camera.setBoundsToWorld();
+
     this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
     this.game.add.existing(this.playerA);
     this.addPlayerControls();
@@ -79,6 +85,11 @@ Play.prototype = {
     this.walls.forEach(function(wall) {
       this.addToMap(wall.x, wall.y);
     }, this);
+  },
+  createPills: function() {
+    this.pills = this.game.add.group();
+
+    this.pills.add(new Pill(this.game, 1,1));
   },
   addPlayerControls: function() {
     var controls = {
