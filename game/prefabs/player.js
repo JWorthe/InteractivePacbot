@@ -6,6 +6,10 @@ var Player = function(game, x, y, key, frame) {
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
   this.anchor = {x: 0.5, y: 0.5};
+  
+  this.game.physics.arcade.enableBody(this);
+
+  this.score = 0;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
