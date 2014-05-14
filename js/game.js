@@ -15,7 +15,26 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":4,"./states/gameover":5,"./states/menu":6,"./states/play":7,"./states/preload":8}],2:[function(require,module,exports){
+},{"./states/boot":5,"./states/gameover":6,"./states/menu":7,"./states/play":8,"./states/preload":9}],2:[function(require,module,exports){
+'use strict';
+
+var Pill = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'pill', frame);
+  this.scale = {x: 0.01, y: 0.01};
+  this.anchor = {x: 0.5, y: 0.5};
+  
+  this.game.physics.arcade.enableBody(this);
+};
+
+Pill.prototype = Object.create(Phaser.Sprite.prototype);
+Pill.prototype.constructor = Pill;
+
+Pill.prototype.update = function() {
+};
+
+module.exports = Pill;
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var Player = function(game, x, y, key, frame) {
@@ -23,6 +42,11 @@ var Player = function(game, x, y, key, frame) {
 
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
+  this.anchor = {x: 0.5, y: 0.5};
+  
+  this.game.physics.arcade.enableBody(this);
+
+  this.score = 0;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
@@ -48,12 +72,13 @@ Player.prototype.finishMovement = function() {
 
 module.exports = Player;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var Wall = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'wall', frame);
   this.scale = {x: 0.01, y: 0.01};
+  this.anchor = {x: 0.5, y: 0.5};
 };
 
 Wall.prototype = Object.create(Phaser.Sprite.prototype);
@@ -61,7 +86,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -79,7 +104,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 function GameOver() {}
@@ -95,7 +120,7 @@ GameOver.prototype = {
 
 module.exports = GameOver;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 function Menu() {}
@@ -111,11 +136,12 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 var Wall = require('../prefabs/wall');
 var Player = require('../prefabs/player');
+var Pill = require('../prefabs/pill');
 
 function Play() {}
 
@@ -146,12 +172,20 @@ Play.prototype = {
   },
   create: function() {
     this.createWalls();
+    this.createPills();
+
     this.world.scale = {x:100, y:100};
+    this.world.bounds = {x: -50, y:-50, width: this.game.width, height: this.game.height};
+    this.world.camera.setBoundsToWorld();
+
     this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
     this.game.add.existing(this.playerA);
     this.addPlayerControls();
+
+    this.game.physics.startSystem(Phaser.Physics.ARCADE);
   },
   update: function() {
+    this.game.physics.arcade.overlap(this.playerA, this.pills, this.playerPillCollision, null, this);
   },
   createWalls: function() {
     this.walls = this.game.add.group();
@@ -194,6 +228,29 @@ Play.prototype = {
       this.addToMap(wall.x, wall.y);
     }, this);
   },
+  createPills: function() {
+    this.pills = this.game.add.group();
+
+    this.pills.add(new Pill(this.game, 1,1));
+    this.pills.add(new Pill(this.game, 2,1));
+    this.pills.add(new Pill(this.game, 3,1));
+    this.pills.add(new Pill(this.game, 4,1));
+    this.pills.add(new Pill(this.game, 5,1));
+    this.pills.add(new Pill(this.game, 6,1));
+
+    this.pills.add(new Pill(this.game, 3,2));
+    this.pills.add(new Pill(this.game, 4,2));
+
+    this.pills.add(new Pill(this.game, 3,3));
+    this.pills.add(new Pill(this.game, 4,3));
+
+    this.pills.add(new Pill(this.game, 1,4));
+    this.pills.add(new Pill(this.game, 2,4));
+    this.pills.add(new Pill(this.game, 3,4));
+    this.pills.add(new Pill(this.game, 4,4));
+    this.pills.add(new Pill(this.game, 5,4));
+    this.pills.add(new Pill(this.game, 6,4));
+  },
   addPlayerControls: function() {
     var controls = {
       up: Phaser.Keyboard.UP,
@@ -220,12 +277,18 @@ Play.prototype = {
     if (!this.checkMap(newX, newY)) {
       player.move(newX, newY);
     }
+  },
+  playerPillCollision: function(player, pill) {
+    player.score++;
+    pill.destroy();
+
+    console.log(this.playerA.score);
   }
 };
 
 module.exports = Play;
 
-},{"../prefabs/player":2,"../prefabs/wall":3}],8:[function(require,module,exports){
+},{"../prefabs/pill":2,"../prefabs/player":3,"../prefabs/wall":4}],9:[function(require,module,exports){
 'use strict';
 
 function Preload() {
@@ -242,6 +305,7 @@ Preload.prototype = {
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
     this.load.image('player-a', 'assets/images/player-a.svg');
+    this.load.image('pill', 'assets/images/pill.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;
