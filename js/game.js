@@ -173,19 +173,18 @@ Play.prototype = {
   create: function() {
     this.createWalls();
     this.createPills();
+    this.createPlayers();
 
     this.world.scale = {x:100, y:100};
     this.world.bounds = {x: -50, y:-50, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
-    this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
-    this.game.add.existing(this.playerA);
     this.addPlayerControls();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
   },
   update: function() {
-    this.game.physics.arcade.overlap(this.playerA, this.pills, this.playerPillCollision, null, this);
+    this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
   },
   createWalls: function() {
     this.walls = this.game.add.group();
@@ -251,24 +250,47 @@ Play.prototype = {
     this.pills.add(new Pill(this.game, 5,4));
     this.pills.add(new Pill(this.game, 6,4));
   },
+  createPlayers: function() {
+    this.players = this.game.add.group();
+
+    this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
+    this.playerB = new Player(this.game, 6, 2, 'player-b', 0);
+    this.players.add(this.playerA);
+    this.players.add(this.playerB);
+  },
   addPlayerControls: function() {
-    var controls = {
+    var playerAControls = {
+      up: Phaser.Keyboard.W,
+      left: Phaser.Keyboard.A,
+      down: Phaser.Keyboard.S,
+      right: Phaser.Keyboard.D
+    }
+    var playerBControls = {
       up: Phaser.Keyboard.UP,
-      down: Phaser.Keyboard.DOWN,
       left: Phaser.Keyboard.LEFT,
+      down: Phaser.Keyboard.DOWN,
       right: Phaser.Keyboard.RIGHT
     };
-    this.game.input.keyboard.addKeyCapture([
-      controls.up,
-      controls.down,
-      controls.left,
-      controls.right
-    ]);
 
-    this.game.input.keyboard.addKey(controls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
-    this.game.input.keyboard.addKey(controls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
-    this.game.input.keyboard.addKey(controls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
-    this.game.input.keyboard.addKey(controls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+    function addKeyCaptures(controls, keyboard) {
+      for (var index in controls) {
+        if (controls.hasOwnProperty(index)) {
+          keyboard.addKeyCapture(playerAControls[index]);
+        }
+      }
+    }
+    addKeyCaptures(playerAControls, this.game.input.keyboard);
+    addKeyCaptures(playerBControls, this.game.input.keyboard);
+
+    this.game.input.keyboard.addKey(playerAControls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
+    this.game.input.keyboard.addKey(playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
+    this.game.input.keyboard.addKey(playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
+    this.game.input.keyboard.addKey(playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+
+    this.game.input.keyboard.addKey(playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
+    this.game.input.keyboard.addKey(playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
+    this.game.input.keyboard.addKey(playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
+    this.game.input.keyboard.addKey(playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -282,7 +304,7 @@ Play.prototype = {
     player.score++;
     pill.destroy();
 
-    console.log(this.playerA.score);
+    console.log('A: ' + this.playerA.score + '    B: ' + this.playerB.score);
   }
 };
 
@@ -305,6 +327,7 @@ Preload.prototype = {
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
     this.load.image('player-a', 'assets/images/player-a.svg');
+    this.load.image('player-b', 'assets/images/player-b.svg');
     this.load.image('pill', 'assets/images/pill.svg');
   },
   create: function() {
