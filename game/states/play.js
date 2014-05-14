@@ -46,6 +46,20 @@ Play.prototype = {
   },
   update: function() {
     this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
+
+    if (this.pills.total === 0) {
+      
+      if (this.playerA.score > this.playerB.score) {
+        console.log("PLAYER A WINS!");
+      }
+      else if (this.playerA.score < this.playerB.score) {
+        console.log("PLAYER B WINS!");
+      }
+      else {
+        console.log("THIS GAME WAS A DRAW!")
+      }
+      this.game.state.start('play');
+    }
   },
   createWalls: function() {
     this.walls = this.game.add.group();
