@@ -16,6 +16,8 @@ Preload.prototype = {
     this.load.image('player-a', 'assets/images/player-a.svg');
     this.load.image('player-b', 'assets/images/player-b.svg');
     this.load.image('pill', 'assets/images/pill.svg');
+
+    this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
   },
   create: function() {
     this.asset.cropEnabled = false;

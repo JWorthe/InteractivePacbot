@@ -43,6 +43,9 @@ Play.prototype = {
     this.addPlayerControls();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'scorefont','0',1);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/100 - 2.1, -0.4, 'scorefont','0',1);
   },
   update: function() {
     this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
@@ -179,7 +182,8 @@ Play.prototype = {
     player.score++;
     pill.destroy();
 
-    console.log('A: ' + this.playerA.score + '    B: ' + this.playerB.score);
+    this.playerAScoreText.setText(this.playerA.score+'');
+    this.playerBScoreText.setText(this.playerB.score+'');
   }
 };
 
