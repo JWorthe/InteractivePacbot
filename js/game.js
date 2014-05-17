@@ -182,9 +182,26 @@ Play.prototype = {
     this.addPlayerControls();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'scorefont','0',1);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/100 - 2.1, -0.4, 'scorefont','0',1);
   },
   update: function() {
     this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
+
+    if (this.pills.total === 0) {
+      
+      if (this.playerA.score > this.playerB.score) {
+        console.log("PLAYER A WINS!");
+      }
+      else if (this.playerA.score < this.playerB.score) {
+        console.log("PLAYER B WINS!");
+      }
+      else {
+        console.log("THIS GAME WAS A DRAW!")
+      }
+      this.game.state.start('play');
+    }
   },
   createWalls: function() {
     this.walls = this.game.add.group();
@@ -304,7 +321,8 @@ Play.prototype = {
     player.score++;
     pill.destroy();
 
-    console.log('A: ' + this.playerA.score + '    B: ' + this.playerB.score);
+    this.playerAScoreText.setText(this.playerA.score+'');
+    this.playerBScoreText.setText(this.playerB.score+'');
   }
 };
 
@@ -329,6 +347,8 @@ Preload.prototype = {
     this.load.image('player-a', 'assets/images/player-a.svg');
     this.load.image('player-b', 'assets/images/player-b.svg');
     this.load.image('pill', 'assets/images/pill.svg');
+
+    this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
   },
   create: function() {
     this.asset.cropEnabled = false;
