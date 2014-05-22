@@ -10,6 +10,7 @@ var Player = function(game, x, y, key, frame) {
   this.game.physics.arcade.enableBody(this);
 
   this.score = 0;
+  this.isMyTurn = false;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
@@ -19,7 +20,7 @@ Player.prototype.update = function() {
 };
 
 Player.prototype.move = function(newX, newY) {
-  if (this.moving) {
+  if (this.moving || !this.isMyTurn) {
     return;
   }
 

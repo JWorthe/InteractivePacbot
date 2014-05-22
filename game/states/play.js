@@ -135,6 +135,8 @@ Play.prototype = {
     this.playerB = new Player(this.game, 6, 2, 'player-b', 0);
     this.players.add(this.playerA);
     this.players.add(this.playerB);
+
+    this.updatePlayerTurn(0);
   },
   addPlayerControls: function() {
     var playerAControls = {
@@ -174,8 +176,9 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
 
-    if (!this.checkMap(newX, newY)) {
+    if (!this.checkMap(newX, newY) && player.isMyTurn) {
       player.move(newX, newY);
+      this.togglePlayerTurn();
     }
   },
   playerPillCollision: function(player, pill) {
@@ -184,6 +187,16 @@ Play.prototype = {
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');
+  },
+  togglePlayerTurn: function() {
+    this.updatePlayerTurn((this.playerTurn+1)%this.players.length);
+  },
+  updatePlayerTurn: function(newPlayerTurn) {
+    this.playerTurn = newPlayerTurn;
+    for (var i=0; i<this.players.children.length; ++i) {
+      this.players.children[i].isMyTurn = (i === this.playerTurn);
+    }
+    console.log("Player " + this.playerTurn + "'s turn");
   }
 };
 
