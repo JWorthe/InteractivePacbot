@@ -1,5 +1,5 @@
 {
-  "name": "interactive-pacbot",
+  "name": "interactive-pacbot",  
   "private": true,
   "devDependencies": {
     "grunt": "~0.4.1",
@@ -18,5 +18,14 @@
   },
   "engines": {
     "node": ">=0.8.0"
+  },
+  "main": "dist/index.html",
+  "window": {
+    "title": "Interactive Pacbot",
+    "toolbar": false,
+    "frame": true,
+    "width": 820,
+    "height": 620,
+    "position": "center"
   }
 }
