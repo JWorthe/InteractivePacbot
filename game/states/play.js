@@ -47,8 +47,6 @@ Play.prototype = {
     this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont','0',1);
     this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 2.1, -0.4, 'spaced-scorefont','0',1);
 
-    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', '', 1);
-
     this.gameWon = false;
   },
   update: function() {
@@ -207,7 +205,7 @@ Play.prototype = {
     console.log("Player " + this.playerTurn + "'s turn");
   },
   setVictoryText: function(newText) {
-    this.victoryText.setText(newText);
+    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
     this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {  
