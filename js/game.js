@@ -39,7 +39,7 @@ module.exports = Pill;
 
 var Player = function(game, x, y, key, frame) {
   Phaser.Sprite.call(this, game, x, y, key, frame);
-
+  this.baseKey = key;
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
   this.anchor = {x: 0.5, y: 0.5};
@@ -47,16 +47,22 @@ var Player = function(game, x, y, key, frame) {
   this.game.physics.arcade.enableBody(this);
 
   this.score = 0;
+  this.isMyTurn = false;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
-Player.prototype.update = function() {  
+Player.prototype.update = function() {
+  var newKey = this.baseKey + (this.isMyTurn ? '' : '-dim');
+  if (this.key !== newKey) {
+    console.log('Setting sprite to ' + newKey);
+    this.loadTexture(newKey);
+  }
 };
 
 Player.prototype.move = function(newX, newY) {
-  if (this.moving) {
+  if (this.moving || !this.isMyTurn) {
     return;
   }
 
@@ -183,24 +189,30 @@ Play.prototype = {
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'scorefont','0',1);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/100 - 2.1, -0.4, 'scorefont','0',1);
+    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont','0',1);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 2.1, -0.4, 'spaced-scorefont','0',1);
+
+    this.gameWon = false;
   },
   update: function() {
     this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
 
-    if (this.pills.total === 0) {
-      
+    if (!this.gameWon && this.pills.total === 0) {
+      this.gameWon = true;
       if (this.playerA.score > this.playerB.score) {
-        console.log("PLAYER A WINS!");
+        this.setVictoryText("PLAYER A WINS");
       }
       else if (this.playerA.score < this.playerB.score) {
-        console.log("PLAYER B WINS!");
+        this.setVictoryText("PLAYER B WINS");
       }
       else {
-        console.log("THIS GAME WAS A DRAW!")
+        this.setVictoryText("DRAW");
       }
-      this.game.state.start('play');
+
+      var self = this;
+      setTimeout(function() {
+        self.game.state.start('play');
+      }, 5000);
     }
   },
   createWalls: function() {
@@ -274,15 +286,17 @@ Play.prototype = {
     this.playerB = new Player(this.game, 6, 2, 'player-b', 0);
     this.players.add(this.playerA);
     this.players.add(this.playerB);
+
+    this.updatePlayerTurn(0);
   },
   addPlayerControls: function() {
-    var playerAControls = {
+    this.playerAControls = {
       up: Phaser.Keyboard.W,
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
       right: Phaser.Keyboard.D
     }
-    var playerBControls = {
+    this.playerBControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
       down: Phaser.Keyboard.DOWN,
@@ -292,29 +306,30 @@ Play.prototype = {
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
         if (controls.hasOwnProperty(index)) {
-          keyboard.addKeyCapture(playerAControls[index]);
+          keyboard.addKeyCapture(controls[index]);
         }
       }
     }
-    addKeyCaptures(playerAControls, this.game.input.keyboard);
-    addKeyCaptures(playerBControls, this.game.input.keyboard);
+    addKeyCaptures(this.playerAControls, this.game.input.keyboard);
+    addKeyCaptures(this.playerBControls, this.game.input.keyboard);
 
-    this.game.input.keyboard.addKey(playerAControls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
-    this.game.input.keyboard.addKey(playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
-    this.game.input.keyboard.addKey(playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
-    this.game.input.keyboard.addKey(playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+    this.game.input.keyboard.addKey(this.playerAControls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
+    this.game.input.keyboard.addKey(this.playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
+    this.game.input.keyboard.addKey(this.playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
+    this.game.input.keyboard.addKey(this.playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
 
-    this.game.input.keyboard.addKey(playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
-    this.game.input.keyboard.addKey(playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
-    this.game.input.keyboard.addKey(playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
-    this.game.input.keyboard.addKey(playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
+    this.game.input.keyboard.addKey(this.playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
+    this.game.input.keyboard.addKey(this.playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
+    this.game.input.keyboard.addKey(this.playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
+    this.game.input.keyboard.addKey(this.playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
 
-    if (!this.checkMap(newX, newY)) {
+    if (!this.checkMap(newX, newY) && player.isMyTurn) {
       player.move(newX, newY);
+      this.togglePlayerTurn();
     }
   },
   playerPillCollision: function(player, pill) {
@@ -323,6 +338,31 @@ Play.prototype = {
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');
+  },
+  togglePlayerTurn: function() {
+    this.updatePlayerTurn((this.playerTurn+1)%this.players.length);
+  },
+  updatePlayerTurn: function(newPlayerTurn) {
+    this.playerTurn = newPlayerTurn;
+    for (var i=0; i<this.players.children.length; ++i) {
+      this.players.children[i].isMyTurn = (i === this.playerTurn);
+    }
+    console.log("Player " + this.playerTurn + "'s turn");
+  },
+  setVictoryText: function(newText) {
+    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
+    this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
+  },
+  shutdown: function() {  
+    this.game.input.keyboard.removeKey(this.playerAControls.up);
+    this.game.input.keyboard.removeKey(this.playerAControls.down);
+    this.game.input.keyboard.removeKey(this.playerAControls.left);
+    this.game.input.keyboard.removeKey(this.playerAControls.right);
+
+    this.game.input.keyboard.removeKey(this.playerBControls.up);
+    this.game.input.keyboard.removeKey(this.playerBControls.down);
+    this.game.input.keyboard.removeKey(this.playerBControls.left);
+    this.game.input.keyboard.removeKey(this.playerBControls.right);
   }
 };
 
@@ -345,10 +385,13 @@ Preload.prototype = {
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
     this.load.image('player-a', 'assets/images/player-a.svg');
+    this.load.image('player-a-dim', 'assets/images/player-a-dim.svg');
     this.load.image('player-b', 'assets/images/player-b.svg');
+    this.load.image('player-b-dim', 'assets/images/player-b-dim.svg');
     this.load.image('pill', 'assets/images/pill.svg');
 
-    this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('spaced-scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt');
   },
   create: function() {
     this.asset.cropEnabled = false;

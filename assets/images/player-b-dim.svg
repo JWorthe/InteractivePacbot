@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="player-b.svg">
+   sodipodi:docname="player-b-dim.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -54,7 +54,7 @@
      transform="translate(0,-952.36218)">
     <path
        sodipodi:type="arc"
-       style="fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:#0000ff;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#999900;fill-opacity:1;fill-rule:evenodd;stroke:#0000ff;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="path2985"
        sodipodi:cx="50"
        sodipodi:cy="50"
