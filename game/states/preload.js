@@ -21,6 +21,8 @@ Preload.prototype = {
 
     this.load.bitmapFont('spaced-scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt');
+
+    this.load.text('level', 'assets/levels/maze.lvl');
   },
   create: function() {
     this.asset.cropEnabled = false;
