@@ -182,7 +182,7 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
 
-    if (!this.checkMap(newX, newY) && player.isMyTurn) {
+    if (!this.checkMap(newX, newY) && player.isMyTurn && !player.moving) {
       player.move(newX, newY);
       this.togglePlayerTurn();
     }

@@ -25,10 +25,6 @@ Player.prototype.update = function() {
 };
 
 Player.prototype.move = function(newX, newY) {
-  if (this.moving || !this.isMyTurn) {
-    return;
-  }
-
   this.moving = true;
   var tween = this.game.add.tween(this).to({x: newX, y: newY}, 500);
   tween.onComplete.add(this.finishMovement, this);
