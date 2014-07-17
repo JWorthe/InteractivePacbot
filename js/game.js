@@ -3,7 +3,7 @@
 
 //global variables
 window.onload = function () {
-  var game = new Phaser.Game(800, 600, Phaser.AUTO, 'interactive-pacbot');
+  var game = new Phaser.Game(1100, 950, Phaser.AUTO, 'interactive-pacbot');
 
   // Game States
   game.state.add('boot', require('./states/boot'));
@@ -62,10 +62,6 @@ Player.prototype.update = function() {
 };
 
 Player.prototype.move = function(newX, newY) {
-  if (this.moving || !this.isMyTurn) {
-    return;
-  }
-
   this.moving = true;
   var tween = this.game.add.tween(this).to({x: newX, y: newY}, 500);
   tween.onComplete.add(this.finishMovement, this);
@@ -177,12 +173,10 @@ Play.prototype = {
   preload: function() {
   },
   create: function() {
-    this.createWalls();
-    this.createPills();
-    this.createPlayers();
+    this.readLevelFile();
 
-    this.world.scale = {x:100, y:100};
-    this.world.bounds = {x: -50, y:-50, width: this.game.width, height: this.game.height};
+    this.world.scale = {x:50, y:50};
+    this.world.bounds = {x: -25, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
     this.addPlayerControls();
@@ -215,78 +209,39 @@ Play.prototype = {
       }, 5000);
     }
   },
-  createWalls: function() {
+  readLevelFile: function() {
     this.walls = this.game.add.group();
+    this.pills = this.game.add.group();
+    this.players = this.game.add.group();
 
-    this.walls.add(new Wall(this.game, 0,0));
-    this.walls.add(new Wall(this.game, 1,0));
-    this.walls.add(new Wall(this.game, 2,0));
-    this.walls.add(new Wall(this.game, 3,0));
-    this.walls.add(new Wall(this.game, 4,0));
-    this.walls.add(new Wall(this.game, 5,0));
-    this.walls.add(new Wall(this.game, 6,0));
-    this.walls.add(new Wall(this.game, 7,0));
+    var levelText = this.game.cache.getText('level');
+    var splitRows = levelText.split('\n');
 
-    this.walls.add(new Wall(this.game, 0,1));
-    this.walls.add(new Wall(this.game, 7,1));
 
-    this.walls.add(new Wall(this.game, 0,2));
-    this.walls.add(new Wall(this.game, 2,2));
-    this.walls.add(new Wall(this.game, 5,2));
-    this.walls.add(new Wall(this.game, 7,2));
-
-    this.walls.add(new Wall(this.game, 0,3));
-    this.walls.add(new Wall(this.game, 2,3));
-    this.walls.add(new Wall(this.game, 5,3));
-    this.walls.add(new Wall(this.game, 7,3));
-
-    this.walls.add(new Wall(this.game, 0,4));
-    this.walls.add(new Wall(this.game, 7,4));
-
-    this.walls.add(new Wall(this.game, 0,5));
-    this.walls.add(new Wall(this.game, 1,5));
-    this.walls.add(new Wall(this.game, 2,5));
-    this.walls.add(new Wall(this.game, 3,5));
-    this.walls.add(new Wall(this.game, 4,5));
-    this.walls.add(new Wall(this.game, 5,5));
-    this.walls.add(new Wall(this.game, 6,5));
-    this.walls.add(new Wall(this.game, 7,5));
+    for (var x=0; x<splitRows.length; x++) {
+      for (var y=0; y<splitRows[x].length; y++) {
+        switch(splitRows[x][y]) {
+          case '#':
+            this.walls.add(new Wall(this.game, x, y));
+            break;
+          case '.':
+            this.pills.add(new Pill(this.game, x, y));
+            break;
+          case 'A':
+            this.playerA = new Player(this.game, x, y, 'player-a', 0);
+            this.players.add(this.playerA);
+            break;
+          case 'B':
+            this.playerB = new Player(this.game, x, y, 'player-b', 0);
+            this.players.add(this.playerB);
+            break;
+        }
+      }
+    }
 
     this.walls.forEach(function(wall) {
       this.addToMap(wall.x, wall.y);
     }, this);
-  },
-  createPills: function() {
-    this.pills = this.game.add.group();
-
-    this.pills.add(new Pill(this.game, 1,1));
-    this.pills.add(new Pill(this.game, 2,1));
-    this.pills.add(new Pill(this.game, 3,1));
-    this.pills.add(new Pill(this.game, 4,1));
-    this.pills.add(new Pill(this.game, 5,1));
-    this.pills.add(new Pill(this.game, 6,1));
-
-    this.pills.add(new Pill(this.game, 3,2));
-    this.pills.add(new Pill(this.game, 4,2));
-
-    this.pills.add(new Pill(this.game, 3,3));
-    this.pills.add(new Pill(this.game, 4,3));
-
-    this.pills.add(new Pill(this.game, 1,4));
-    this.pills.add(new Pill(this.game, 2,4));
-    this.pills.add(new Pill(this.game, 3,4));
-    this.pills.add(new Pill(this.game, 4,4));
-    this.pills.add(new Pill(this.game, 5,4));
-    this.pills.add(new Pill(this.game, 6,4));
-  },
-  createPlayers: function() {
-    this.players = this.game.add.group();
-
-    this.playerA = new Player(this.game, 1, 2, 'player-a', 0);
-    this.playerB = new Player(this.game, 6, 2, 'player-b', 0);
-    this.players.add(this.playerA);
-    this.players.add(this.playerB);
-
     this.updatePlayerTurn(0);
   },
   addPlayerControls: function() {
@@ -327,7 +282,7 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
 
-    if (!this.checkMap(newX, newY) && player.isMyTurn) {
+    if (!this.checkMap(newX, newY) && player.isMyTurn && !player.moving) {
       player.move(newX, newY);
       this.togglePlayerTurn();
     }
@@ -392,6 +347,8 @@ Preload.prototype = {
 
     this.load.bitmapFont('spaced-scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt');
+
+    this.load.text('level', 'assets/levels/maze.lvl');
   },
   create: function() {
     this.asset.cropEnabled = false;
