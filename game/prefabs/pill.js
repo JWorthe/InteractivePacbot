@@ -6,12 +6,10 @@ var Pill = function(game, x, y, frame) {
   this.anchor = {x: 0.5, y: 0.5};
   
   this.game.physics.arcade.enableBody(this);
+  this.score = 1;
 };
 
 Pill.prototype = Object.create(Phaser.Sprite.prototype);
 Pill.prototype.constructor = Pill;
-
-Pill.prototype.update = function() {
-};
 
 module.exports = Pill;

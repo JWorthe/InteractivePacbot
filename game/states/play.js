@@ -1,8 +1,9 @@
 'use strict';
 
-var Wall = require('../prefabs/wall');
 var Player = require('../prefabs/player');
 var Pill = require('../prefabs/pill');
+var BonusPill = require('../prefabs/bonusPill');
+var Wall = require('../prefabs/wall');
 
 function Play() {}
 
@@ -86,6 +87,9 @@ Play.prototype = {
           case '.':
             this.pills.add(new Pill(this.game, x, y));
             break;
+          case '*':
+            this.pills.add(new BonusPill(this.game, x, y));
+            break;
           case 'A':
             this.playerA = new Player(this.game, x, y, 'player-a', 0);
             this.players.add(this.playerA);
@@ -109,7 +113,7 @@ Play.prototype = {
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
       right: Phaser.Keyboard.D
-    }
+    };
     this.playerBControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
@@ -147,7 +151,7 @@ Play.prototype = {
     }
   },
   playerPillCollision: function(player, pill) {
-    player.score++;
+    player.score += pill.score;
     pill.destroy();
 
     this.playerAScoreText.setText(this.playerA.score+'');
