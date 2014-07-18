@@ -33,6 +33,7 @@ Play.prototype = {
   preload: function() {
   },
   create: function() {
+    this.game.input.gamepad.start();
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
@@ -121,6 +122,9 @@ Play.prototype = {
       right: Phaser.Keyboard.RIGHT
     };
 
+    var padA = this.game.input.gamepad.pad1;
+    var padB = this.game.input.gamepad.pad2;
+
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
         if (controls.hasOwnProperty(index)) {
@@ -135,6 +139,10 @@ Play.prototype = {
     this.game.input.keyboard.addKey(this.playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
     this.game.input.keyboard.addKey(this.playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
     this.game.input.keyboard.addKey(this.playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+    padA.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
+    padA.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
+    padA.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
+    padA.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
 
     this.game.input.keyboard.addKey(this.playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
     this.game.input.keyboard.addKey(this.playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
