@@ -2,6 +2,9 @@
 
 var Player = function(game, x, y, key, frame) {
   Phaser.Sprite.call(this, game, x, y, key, frame);
+  this.animations.add('active', [0]);
+  this.animations.add('waiting', [1]);
+
   this.baseKey = key;
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
@@ -11,16 +14,16 @@ var Player = function(game, x, y, key, frame) {
 
   this.score = 0;
   this.isMyTurn = false;
+  this.animIsMyTurn = true;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
-  var newKey = this.baseKey + (this.isMyTurn ? '' : '-dim');
-  if (this.key !== newKey) {
-    console.log('Setting sprite to ' + newKey);
-    this.loadTexture(newKey);
+  if (this.isMyTurn !== this.animIsMyTurn) {
+    this.animIsMyTurn = this.isMyTurn;
+    this.play(this.animIsMyTurn ? 'active' : 'waiting');
   }
 };
 

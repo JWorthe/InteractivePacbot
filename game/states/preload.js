@@ -13,10 +13,8 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
-    this.load.image('player-a', 'assets/images/player-a.svg');
-    this.load.image('player-a-dim', 'assets/images/player-a-dim.svg');
-    this.load.image('player-b', 'assets/images/player-b.svg');
-    this.load.image('player-b-dim', 'assets/images/player-b-dim.svg');
+    this.load.spritesheet('player-a', 'assets/images/player-a-spritesheet.svg', 100, 100);
+    this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
     this.load.image('pill', 'assets/images/pill.svg');
     this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
 
