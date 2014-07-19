@@ -33,7 +33,6 @@ Play.prototype = {
   preload: function() {
   },
   create: function() {
-    this.game.input.gamepad.start();
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
@@ -68,6 +67,30 @@ Play.prototype = {
       setTimeout(function() {
         self.game.state.start('play');
       }, 5000);
+    }
+
+    this.pollAnalogSticks()
+  },
+  pollAnalogSticks: function() {
+    if (this.game.input.gamepad.pad1.connected) {
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerA);
+    }
+    if (this.game.input.gamepad.pad2.connected) {
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerB);
+    }
+  },
+  pollAnalogStickForPlayer: function(pad, player) {
+    if (pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.2) {
+      this.movePlayer(player, -1, 0);
+    }
+    if (pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.2) {
+      this.movePlayer(player, 1, 0);
+    }
+    if (pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.2) {
+      this.movePlayer(player, 0, -1);
+    }
+    if (pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.2) {
+      this.movePlayer(player, 0, 1);
     }
   },
   readLevelFile: function() {
@@ -108,6 +131,7 @@ Play.prototype = {
     }, this);
     this.updatePlayerTurn(0);
   },
+
   addPlayerControls: function() {
     this.playerAControls = {
       up: Phaser.Keyboard.W,
@@ -121,9 +145,6 @@ Play.prototype = {
       down: Phaser.Keyboard.DOWN,
       right: Phaser.Keyboard.RIGHT
     };
-
-    var padA = this.game.input.gamepad.pad1;
-    var padB = this.game.input.gamepad.pad2;
 
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
@@ -139,22 +160,27 @@ Play.prototype = {
     this.game.input.keyboard.addKey(this.playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
     this.game.input.keyboard.addKey(this.playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
     this.game.input.keyboard.addKey(this.playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
-    if (padA.connected) {
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
-    }
 
     this.game.input.keyboard.addKey(this.playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
     this.game.input.keyboard.addKey(this.playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
     this.game.input.keyboard.addKey(this.playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
     this.game.input.keyboard.addKey(this.playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
-    if (padB.connected) {
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
+
+
+    this.game.input.gamepad.start();
+
+    var padA = this.game.input.gamepad.pad1;
+    var padB = this.game.input.gamepad.pad2;
+    padA.addCallbacks(this, { onConnect: this.addGamepadControlsPlayer.bind(this, this.padA, this.playerA) });
+    padB.addCallbacks(this, { onConnect: this.addGamepadControlsPlayer.bind(this, this.padB, this.playerB) });
+  },
+
+  addGamepadControlsPlayer: function(pad, player) {
+    if (pad.connected) {
+      pad.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.player, 0, -1), this);
+      pad.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.player, 0, 1), this);
+      pad.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.player, -1, 0), this);
+      pad.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.player, 1, 0), this);
     }
   },
   movePlayer: function(player, deltaX, deltaY) {
@@ -187,7 +213,7 @@ Play.prototype = {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
     this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
   },
-  shutdown: function() {  
+  shutdown: function() {
     this.game.input.keyboard.removeKey(this.playerAControls.up);
     this.game.input.keyboard.removeKey(this.playerAControls.down);
     this.game.input.keyboard.removeKey(this.playerAControls.left);
