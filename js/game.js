@@ -192,14 +192,13 @@ Play.prototype = {
   preload: function() {
   },
   create: function() {
-    this.game.input.gamepad.start();
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
     this.world.bounds = {x: -25, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
-    this.addPlayerControls();
+    this.setupPlayerControls();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -227,6 +226,55 @@ Play.prototype = {
       setTimeout(function() {
         self.game.state.start('play');
       }, 5000);
+    }
+
+    this.pollPlayerInput();
+  },
+  pollPlayerInput: function() {
+    if (this.game.input.gamepad.pad1.connected) {
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerA);
+    }
+    if (this.game.input.gamepad.pad2.connected) {
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerB);
+    }
+
+    if (this.game.input.keyboard.isDown(this.playerAControls.up)) {
+      this.movePlayer(this.playerA, 0, -1);
+    }
+    if (this.game.input.keyboard.isDown(this.playerAControls.down)) {
+      this.movePlayer(this.playerA, 0, 1);
+    }
+    if (this.game.input.keyboard.isDown(this.playerAControls.left)) {
+      this.movePlayer(this.playerA, -1, 0);
+    }
+    if (this.game.input.keyboard.isDown(this.playerAControls.right)) {
+      this.movePlayer(this.playerA, 1, 0);
+    }
+    if (this.game.input.keyboard.isDown(this.playerBControls.up)) {
+      this.movePlayer(this.playerB, 0, -1);
+    }
+    if (this.game.input.keyboard.isDown(this.playerBControls.down)) {
+      this.movePlayer(this.playerB, 0, 1);
+    }
+    if (this.game.input.keyboard.isDown(this.playerBControls.left)) {
+      this.movePlayer(this.playerB, -1, 0);
+    }
+    if (this.game.input.keyboard.isDown(this.playerBControls.right)) {
+      this.movePlayer(this.playerB, 1, 0);
+    }
+  },
+  pollAnalogStickForPlayer: function(pad, player) {
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.2) {
+      this.movePlayer(player, -1, 0);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.2) {
+      this.movePlayer(player, 1, 0);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.2) {
+      this.movePlayer(player, 0, -1);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.2) {
+      this.movePlayer(player, 0, 1);
     }
   },
   readLevelFile: function() {
@@ -267,7 +315,8 @@ Play.prototype = {
     }, this);
     this.updatePlayerTurn(0);
   },
-  addPlayerControls: function() {
+
+  setupPlayerControls: function() {
     this.playerAControls = {
       up: Phaser.Keyboard.W,
       left: Phaser.Keyboard.A,
@@ -281,9 +330,6 @@ Play.prototype = {
       right: Phaser.Keyboard.RIGHT
     };
 
-    var padA = this.game.input.gamepad.pad1;
-    var padB = this.game.input.gamepad.pad2;
-
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
         if (controls.hasOwnProperty(index)) {
@@ -294,27 +340,7 @@ Play.prototype = {
     addKeyCaptures(this.playerAControls, this.game.input.keyboard);
     addKeyCaptures(this.playerBControls, this.game.input.keyboard);
 
-    this.game.input.keyboard.addKey(this.playerAControls.up).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
-    this.game.input.keyboard.addKey(this.playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
-    this.game.input.keyboard.addKey(this.playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
-    this.game.input.keyboard.addKey(this.playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
-    if (padA.connected) {
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
-      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
-    }
-
-    this.game.input.keyboard.addKey(this.playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
-    this.game.input.keyboard.addKey(this.playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
-    this.game.input.keyboard.addKey(this.playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
-    this.game.input.keyboard.addKey(this.playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
-    if (padB.connected) {
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
-      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
-    }
+    this.game.input.gamepad.start();
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -346,7 +372,7 @@ Play.prototype = {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
     this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
   },
-  shutdown: function() {  
+  shutdown: function() {
     this.game.input.keyboard.removeKey(this.playerAControls.up);
     this.game.input.keyboard.removeKey(this.playerAControls.down);
     this.game.input.keyboard.removeKey(this.playerAControls.left);
