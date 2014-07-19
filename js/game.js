@@ -15,7 +15,24 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":5,"./states/gameover":6,"./states/menu":7,"./states/play":8,"./states/preload":9}],2:[function(require,module,exports){
+},{"./states/boot":6,"./states/gameover":7,"./states/menu":8,"./states/play":9,"./states/preload":10}],2:[function(require,module,exports){
+'use strict';
+
+var BonusPill = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'bonus-pill', frame);
+  this.scale = {x: 0.01, y: 0.01};
+  this.anchor = {x: 0.5, y: 0.5};
+  
+  this.game.physics.arcade.enableBody(this);
+  this.score = 10;
+};
+
+BonusPill.prototype = Object.create(Phaser.Sprite.prototype);
+BonusPill.prototype.constructor = BonusPill;
+
+module.exports = BonusPill;
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var Pill = function(game, x, y, frame) {
@@ -24,21 +41,22 @@ var Pill = function(game, x, y, frame) {
   this.anchor = {x: 0.5, y: 0.5};
   
   this.game.physics.arcade.enableBody(this);
+  this.score = 1;
 };
 
 Pill.prototype = Object.create(Phaser.Sprite.prototype);
 Pill.prototype.constructor = Pill;
 
-Pill.prototype.update = function() {
-};
-
 module.exports = Pill;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var Player = function(game, x, y, key, frame) {
   Phaser.Sprite.call(this, game, x, y, key, frame);
+  this.animations.add('active', [0]);
+  this.animations.add('waiting', [1]);
+
   this.baseKey = key;
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
@@ -48,16 +66,16 @@ var Player = function(game, x, y, key, frame) {
 
   this.score = 0;
   this.isMyTurn = false;
+  this.animIsMyTurn = true;
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
-  var newKey = this.baseKey + (this.isMyTurn ? '' : '-dim');
-  if (this.key !== newKey) {
-    console.log('Setting sprite to ' + newKey);
-    this.loadTexture(newKey);
+  if (this.isMyTurn !== this.animIsMyTurn) {
+    this.animIsMyTurn = this.isMyTurn;
+    this.play(this.animIsMyTurn ? 'active' : 'waiting');
   }
 };
 
@@ -74,7 +92,7 @@ Player.prototype.finishMovement = function() {
 
 module.exports = Player;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 var Wall = function(game, x, y, frame) {
@@ -88,7 +106,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -106,7 +124,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 function GameOver() {}
@@ -122,7 +140,7 @@ GameOver.prototype = {
 
 module.exports = GameOver;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 function Menu() {}
@@ -138,12 +156,13 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
-var Wall = require('../prefabs/wall');
 var Player = require('../prefabs/player');
 var Pill = require('../prefabs/pill');
+var BonusPill = require('../prefabs/bonusPill');
+var Wall = require('../prefabs/wall');
 
 function Play() {}
 
@@ -173,6 +192,7 @@ Play.prototype = {
   preload: function() {
   },
   create: function() {
+    this.game.input.gamepad.start();
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
@@ -210,9 +230,9 @@ Play.prototype = {
     }
   },
   readLevelFile: function() {
-    this.walls = this.game.add.group();
     this.pills = this.game.add.group();
     this.players = this.game.add.group();
+    this.walls = this.game.add.group();
 
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
@@ -226,6 +246,9 @@ Play.prototype = {
             break;
           case '.':
             this.pills.add(new Pill(this.game, x, y));
+            break;
+          case '*':
+            this.pills.add(new BonusPill(this.game, x, y));
             break;
           case 'A':
             this.playerA = new Player(this.game, x, y, 'player-a', 0);
@@ -250,13 +273,16 @@ Play.prototype = {
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
       right: Phaser.Keyboard.D
-    }
+    };
     this.playerBControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
       down: Phaser.Keyboard.DOWN,
       right: Phaser.Keyboard.RIGHT
     };
+
+    var padA = this.game.input.gamepad.pad1;
+    var padB = this.game.input.gamepad.pad2;
 
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
@@ -272,11 +298,23 @@ Play.prototype = {
     this.game.input.keyboard.addKey(this.playerAControls.down).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
     this.game.input.keyboard.addKey(this.playerAControls.left).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
     this.game.input.keyboard.addKey(this.playerAControls.right).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+    if (padA.connected) {
+      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerA, 0, -1), this);
+      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerA, 0, 1), this);
+      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerA, -1, 0), this);
+      padA.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerA, 1, 0), this);
+    }
 
     this.game.input.keyboard.addKey(this.playerBControls.up).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
     this.game.input.keyboard.addKey(this.playerBControls.down).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
     this.game.input.keyboard.addKey(this.playerBControls.left).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
     this.game.input.keyboard.addKey(this.playerBControls.right).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
+    if (padB.connected) {
+      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_UP).onDown.add(this.movePlayer.bind(this, this.playerB, 0, -1), this);
+      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN).onDown.add(this.movePlayer.bind(this, this.playerB, 0, 1), this);
+      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT).onDown.add(this.movePlayer.bind(this, this.playerB, -1, 0), this);
+      padB.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT).onDown.add(this.movePlayer.bind(this, this.playerB, 1, 0), this);
+    }
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -288,7 +326,7 @@ Play.prototype = {
     }
   },
   playerPillCollision: function(player, pill) {
-    player.score++;
+    player.score += pill.score;
     pill.destroy();
 
     this.playerAScoreText.setText(this.playerA.score+'');
@@ -323,7 +361,7 @@ Play.prototype = {
 
 module.exports = Play;
 
-},{"../prefabs/pill":2,"../prefabs/player":3,"../prefabs/wall":4}],9:[function(require,module,exports){
+},{"../prefabs/bonusPill":2,"../prefabs/pill":3,"../prefabs/player":4,"../prefabs/wall":5}],10:[function(require,module,exports){
 'use strict';
 
 function Preload() {
@@ -339,11 +377,10 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('wall', 'assets/images/wall.svg');
-    this.load.image('player-a', 'assets/images/player-a.svg');
-    this.load.image('player-a-dim', 'assets/images/player-a-dim.svg');
-    this.load.image('player-b', 'assets/images/player-b.svg');
-    this.load.image('player-b-dim', 'assets/images/player-b-dim.svg');
+    this.load.spritesheet('player-a', 'assets/images/player-a-spritesheet.svg', 100, 100);
+    this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
     this.load.image('pill', 'assets/images/pill.svg');
+    this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
 
     this.load.bitmapFont('spaced-scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt');
