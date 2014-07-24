@@ -44,7 +44,7 @@ Play.prototype = {
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
     this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 3.1, -0.4, 'spaced-scorefont-b','0',2);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 4.5, -0.4, 'spaced-scorefont-b','0',2);
 
     this.gameWon = false;
   },
