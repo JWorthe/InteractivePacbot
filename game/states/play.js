@@ -43,8 +43,8 @@ Play.prototype = {
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont','0',1);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 2.1, -0.4, 'spaced-scorefont','0',1);
+    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 3.1, -0.4, 'spaced-scorefont-b','0',2);
 
     this.gameWon = false;
   },
@@ -54,13 +54,14 @@ Play.prototype = {
     if (!this.gameWon && this.pills.total === 0) {
       this.gameWon = true;
       if (this.playerA.score > this.playerB.score) {
-        this.setVictoryText("PLAYER A WINS");
+        this.setVictoryText('RED WINS', 'a');
       }
       else if (this.playerA.score < this.playerB.score) {
-        this.setVictoryText("PLAYER B WINS");
+        this.setVictoryText('YELLOW WINS', 'b');
       }
       else {
-        this.setVictoryText("DRAW");
+        var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
+        this.setVictoryText('DRAW', victoryColor);
       }
 
       var self = this;
@@ -207,10 +208,9 @@ Play.prototype = {
     for (var i=0; i<this.players.children.length; ++i) {
       this.players.children[i].isMyTurn = (i === this.playerTurn);
     }
-    console.log("Player " + this.playerTurn + "'s turn");
   },
-  setVictoryText: function(newText) {
-    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
+  setVictoryText: function(newText, winnerLetter) {
+    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
     this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {
