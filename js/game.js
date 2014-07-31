@@ -35,22 +35,22 @@ var Orientation = function() {
 	var threshhold = 15;
 
 	if (window.DeviceOrientationEvent) {
-		window.addEventListener('deviceorientation', function(event) {
-			if (event.gamma < -threshhold && previousEvent.gamma >= -threshhold) {
+		window.addEventListener('deviceorientation', function(eventData) {
+			if (eventData.gamma < -threshhold && previousEvent.gamma >= -threshhold) {
 				this.onLeft.dispatch();
 			}
-			if (event.gamma > threshhold && previousEvent.gamma <= threshhold) {
+			if (eventData.gamma > threshhold && previousEvent.gamma <= threshhold) {
 				this.onRight.dispatch();
 			}
-			if (event.beta < -threshhold && previousEvent.beta >= -threshhold) {
+			if (eventData.beta < -threshhold && previousEvent.beta >= -threshhold) {
 				this.onUp.dispatch();
 			}
-			if (event.beta > threshhold && previousEvent.beta <= threshhold) {
+			if (eventData.beta > threshhold && previousEvent.beta <= threshhold) {
 				this.onDown.dispatch();
 			}
 
-			previousEvent.gamma = event.gamma;
-			previousEvent.beta = event.beta;
+			previousEvent.gamma = eventData.gamma;
+			previousEvent.beta = eventData.beta;
 		});
 	}
 };
