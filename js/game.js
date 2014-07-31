@@ -5,6 +5,9 @@
 window.onload = function () {
   var game = new Phaser.Game(1100, 950, Phaser.AUTO, 'interactive-pacbot');
 
+  var Orientation = require('./plugins/orientation');
+  game.orientation = new Orientation();
+
   // Game States
   game.state.add('boot', require('./states/boot'));
   game.state.add('gameover', require('./states/gameover'));
@@ -15,7 +18,47 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":6,"./states/gameover":7,"./states/menu":8,"./states/play":9,"./states/preload":10}],2:[function(require,module,exports){
+},{"./plugins/orientation":2,"./states/boot":7,"./states/gameover":8,"./states/menu":9,"./states/play":10,"./states/preload":11}],2:[function(require,module,exports){
+'use strict';
+
+var Orientation = function() {
+	this.onLeft = new Phaser.Signal();
+	this.onRight = new Phaser.Signal();
+	this.onUp = new Phaser.Signal();
+	this.onDown = new Phaser.Signal();
+
+	var previousEvent = {
+		gamma: 0,
+		beta: 0
+	};
+
+	var threshhold = 15;
+
+	var processOrientationEvent = function(event) {
+		if (event.gamma < -threshhold && previousEvent.gamma >= -threshhold) {
+			this.onLeft.dispatch();
+		}
+		if (event.gamma > threshhold && previousEvent.gamma <= threshhold) {
+			this.onRight.dispatch();
+		}
+		if (event.beta < -threshhold && previousEvent.beta >= -threshhold) {
+			this.onUp.dispatch();
+		}
+		if (event.beta > threshhold && previousEvent.beta <= threshhold) {
+			this.onDown.dispatch();
+		}
+
+
+		previousEvent = event;
+	}
+
+	window.addEventListener('deviceorientation', processOrientationEvent);
+}
+
+
+module.exports = Orientation;
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var BonusPill = function(game, x, y, frame) {
@@ -32,7 +75,7 @@ BonusPill.prototype.constructor = BonusPill;
 
 module.exports = BonusPill;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var Pill = function(game, x, y, frame) {
@@ -49,7 +92,7 @@ Pill.prototype.constructor = Pill;
 
 module.exports = Pill;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 var Player = function(game, x, y, key, frame) {
@@ -92,7 +135,7 @@ Player.prototype.finishMovement = function() {
 
 module.exports = Player;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var Wall = function(game, x, y, frame) {
@@ -106,7 +149,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -124,7 +167,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 function GameOver() {}
@@ -140,7 +183,7 @@ GameOver.prototype = {
 
 module.exports = GameOver;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 function Menu() {}
@@ -156,7 +199,7 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 var Player = require('../prefabs/player');
@@ -202,8 +245,8 @@ Play.prototype = {
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont','0',1);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 2.1, -0.4, 'spaced-scorefont','0',1);
+    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
+    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 4.5, -0.4, 'spaced-scorefont-b','0',2);
 
     this.gameWon = false;
   },
@@ -213,13 +256,14 @@ Play.prototype = {
     if (!this.gameWon && this.pills.total === 0) {
       this.gameWon = true;
       if (this.playerA.score > this.playerB.score) {
-        this.setVictoryText("PLAYER A WINS");
+        this.setVictoryText('RED WINS', 'a');
       }
       else if (this.playerA.score < this.playerB.score) {
-        this.setVictoryText("PLAYER B WINS");
+        this.setVictoryText('YELLOW WINS', 'b');
       }
       else {
-        this.setVictoryText("DRAW");
+        var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
+        this.setVictoryText('DRAW', victoryColor);
       }
 
       var self = this;
@@ -341,6 +385,19 @@ Play.prototype = {
     addKeyCaptures(this.playerBControls, this.game.input.keyboard);
 
     this.game.input.gamepad.start();
+
+    this.game.orientation.onLeft.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], -1, 0);
+    }, this);
+    this.game.orientation.onRight.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 1, 0);
+    }, this);
+    this.game.orientation.onUp.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 0, -1);
+    }, this);
+    this.game.orientation.onDown.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 0, 1);
+    }, this);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -366,10 +423,9 @@ Play.prototype = {
     for (var i=0; i<this.players.children.length; ++i) {
       this.players.children[i].isMyTurn = (i === this.playerTurn);
     }
-    console.log("Player " + this.playerTurn + "'s turn");
   },
-  setVictoryText: function(newText) {
-    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont', newText, 1);
+  setVictoryText: function(newText, winnerLetter) {
+    this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
     this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {
@@ -387,7 +443,7 @@ Play.prototype = {
 
 module.exports = Play;
 
-},{"../prefabs/bonusPill":2,"../prefabs/pill":3,"../prefabs/player":4,"../prefabs/wall":5}],10:[function(require,module,exports){
+},{"../prefabs/bonusPill":3,"../prefabs/pill":4,"../prefabs/player":5,"../prefabs/wall":6}],11:[function(require,module,exports){
 'use strict';
 
 function Preload() {
@@ -408,8 +464,11 @@ Preload.prototype = {
     this.load.image('pill', 'assets/images/pill.svg');
     this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
 
-    this.load.bitmapFont('spaced-scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt', undefined, 10);
-    this.load.bitmapFont('scorefont', 'assets/fonts/scorefont.png', 'assets/fonts/scorefont.fnt');
+    this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');
+
+    this.load.bitmapFont('spaced-scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
 
     this.load.text('level', 'assets/levels/maze.lvl');
   },
