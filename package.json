@@ -24,8 +24,8 @@
     "title": "Interactive Pacbot",
     "toolbar": false,
     "frame": true,
-    "width": 820,
-    "height": 620,
+    "width": 1100,
+    "height": 950,
     "position": "center"
   }
 }

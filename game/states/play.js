@@ -183,6 +183,19 @@ Play.prototype = {
     addKeyCaptures(this.playerBControls, this.game.input.keyboard);
 
     this.game.input.gamepad.start();
+
+    this.game.orientation.onLeft.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], -1, 0);
+    }, this);
+    this.game.orientation.onRight.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 1, 0);
+    }, this);
+    this.game.orientation.onUp.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 0, -1);
+    }, this);
+    this.game.orientation.onDown.add(function() {
+      this.movePlayer(this.players.children[this.playerTurn], 0, 1);
+    }, this);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;

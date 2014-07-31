@@ -4,6 +4,9 @@
 window.onload = function () {
   var game = new Phaser.Game(1100, 950, Phaser.AUTO, 'interactive-pacbot');
 
+  var Orientation = require('./plugins/orientation');
+  game.orientation = new Orientation();
+
   // Game States
   game.state.add('boot', require('./states/boot'));
   game.state.add('gameover', require('./states/gameover'));
