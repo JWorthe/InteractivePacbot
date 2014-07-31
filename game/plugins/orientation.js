@@ -1,35 +1,37 @@
 'use strict';
 
 var Orientation = function() {
-	this.onLeft = new Phaser.Signal();
-	this.onRight = new Phaser.Signal();
-	this.onUp = new Phaser.Signal();
-	this.onDown = new Phaser.Signal();
+	var self = this;
 
-	var previousEvent = {
+	self.onLeft = new Phaser.Signal();
+	self.onRight = new Phaser.Signal();
+	self.onUp = new Phaser.Signal();
+	self.onDown = new Phaser.Signal();
+
+	self.previousEvent = {
 		gamma: 0,
 		beta: 0
 	};
 
-	var threshhold = 15;
+	self.threshhold = 15;
 
 	if (window.DeviceOrientationEvent) {
-		window.addEventListener('deviceorientation', function(event) {
-			if (event.gamma < -threshhold && previousEvent.gamma >= -threshhold) {
-				this.onLeft.dispatch();
+		window.addEventListener('deviceorientation', function(eventData) {
+			if (eventData.gamma < -self.threshhold && self.previousEvent.gamma >= -self.threshhold) {
+				self.onLeft.dispatch();
 			}
-			if (event.gamma > threshhold && previousEvent.gamma <= threshhold) {
-				this.onRight.dispatch();
+			if (eventData.gamma > self.threshhold && self.previousEvent.gamma <= self.threshhold) {
+				self.onRight.dispatch();
 			}
-			if (event.beta < -threshhold && previousEvent.beta >= -threshhold) {
-				this.onUp.dispatch();
+			if (eventData.beta < -self.threshhold && self.previousEvent.beta >= -self.threshhold) {
+				self.onUp.dispatch();
 			}
-			if (event.beta > threshhold && previousEvent.beta <= threshhold) {
-				this.onDown.dispatch();
+			if (eventData.beta > self.threshhold && self.previousEvent.beta <= self.threshhold) {
+				self.onDown.dispatch();
 			}
 
-			previousEvent.gamma = event.gamma;
-			previousEvent.beta = event.beta;
+			self.previousEvent.gamma = eventData.gamma;
+			self.previousEvent.beta = eventData.beta;
 		});
 	}
 };
