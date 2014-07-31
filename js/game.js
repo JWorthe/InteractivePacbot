@@ -53,7 +53,7 @@ var Orientation = function() {
 			previousEvent.beta = event.beta;
 		});
 	}
-}
+};
 
 
 module.exports = Orientation;
