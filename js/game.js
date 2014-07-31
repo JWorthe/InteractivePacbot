@@ -34,7 +34,7 @@ var Orientation = function() {
 
 	var threshhold = 15;
 
-	var processOrientationEvent = function(event) {
+	window.addEventListener('deviceorientation', function(event) {
 		if (event.gamma < -threshhold && previousEvent.gamma >= -threshhold) {
 			this.onLeft.dispatch();
 		}
@@ -48,11 +48,8 @@ var Orientation = function() {
 			this.onDown.dispatch();
 		}
 
-
 		previousEvent = event;
-	}
-
-	window.addEventListener('deviceorientation', processOrientationEvent);
+	});
 }
 
 
