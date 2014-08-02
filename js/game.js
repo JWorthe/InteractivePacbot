@@ -97,7 +97,9 @@ module.exports = Pill;
 },{}],5:[function(require,module,exports){
 'use strict';
 
-var Player = function(game, x, y, key, frame) {
+var Player = function(game, x, y, key, frame, soundKey) {
+  var player = this;
+
   Phaser.Sprite.call(this, game, x, y, key, frame);
   this.animations.add('active', [0]);
   this.animations.add('waiting', [1]);
@@ -106,12 +108,29 @@ var Player = function(game, x, y, key, frame) {
   this.moving = false;
   this.scale = {x: 0.01, y: 0.01};
   this.anchor = {x: 0.5, y: 0.5};
-  
+
   this.game.physics.arcade.enableBody(this);
 
   this.score = 0;
+  this.maxScore = 1;
   this.isMyTurn = false;
   this.animIsMyTurn = true;
+
+  this.scoreSound = game.sound.add(soundKey);
+
+
+  //BEWARE! HORRIBLE HACK AHEAD!
+  //Intercepts the call to get a new buffer so that we can set the playbackRate.
+  var audioContext = this.scoreSound.context;
+  var childContext = Object.create(audioContext);
+  this.scoreSound.context = childContext;
+
+  childContext.createBufferSource = function() {
+    var source = audioContext.createBufferSource();
+    var scoreFraction = player.score / player.maxScore;
+    source.playbackRate.value = 0.75 + scoreFraction*6;
+    return source;
+  }
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
@@ -331,7 +350,6 @@ Play.prototype = {
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
-
     for (var x=0; x<splitRows.length; x++) {
       for (var y=0; y<splitRows[x].length; y++) {
         switch(splitRows[x][y]) {
@@ -345,16 +363,25 @@ Play.prototype = {
             this.pills.add(new BonusPill(this.game, x, y));
             break;
           case 'A':
-            this.playerA = new Player(this.game, x, y, 'player-a', 0);
+            this.playerA = new Player(this.game, x, y, 'player-a', 0, 'omSound');
             this.players.add(this.playerA);
             break;
           case 'B':
-            this.playerB = new Player(this.game, x, y, 'player-b', 0);
+            this.playerB = new Player(this.game, x, y, 'player-b', 0, 'nomSound');
             this.players.add(this.playerB);
             break;
         }
       }
     }
+
+    var maxScore = 0;
+    this.pills.forEach(function(pill) {
+      maxScore += pill.score;
+    }, this);
+
+    this.players.forEach(function(player) {
+      player.maxScore = maxScore;
+    }, this);
 
     this.walls.forEach(function(wall) {
       this.addToMap(wall.x, wall.y);
@@ -413,6 +440,7 @@ Play.prototype = {
   playerPillCollision: function(player, pill) {
     player.score += pill.score;
     pill.destroy();
+    player.scoreSound.play();
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');
@@ -468,9 +496,13 @@ Preload.prototype = {
 
     this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('omSound', 'assets/audio/om.ogg', true);
 
     this.load.bitmapFont('spaced-scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('nomSound', 'assets/audio/nom.ogg', true);
+
+
 
     this.load.text('level', 'assets/levels/maze.lvl');
   },
