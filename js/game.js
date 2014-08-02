@@ -130,7 +130,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
     var scoreFraction = player.score / player.maxScore;
     source.playbackRate.value = 0.75 + scoreFraction*6;
     return source;
-  }
+  };
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);

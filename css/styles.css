@@ -3,15 +3,21 @@ body {
 }
 
 html, body, #interactive-pacbot, #interactive-pacbot>canvas {
-  max-height: 100%;
-  max-width: 100%;
-  height: auto;
-  width: auto;
   margin: 0px;
   padding: 0px;
+}
+
+html, body, #interactive-pacbot {
+  height: 100%;
+  width: 100%;
 }
 
 #interactive-pacbot>canvas {
   margin-left: auto;
   margin-right: auto;
+
+  max-height: 100%;
+  max-width: 100%;
+  height: auto;
+  width: auto;
 }
