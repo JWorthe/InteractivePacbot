@@ -127,7 +127,6 @@ Play.prototype = {
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
-
     for (var x=0; x<splitRows.length; x++) {
       for (var y=0; y<splitRows[x].length; y++) {
         switch(splitRows[x][y]) {
@@ -141,16 +140,25 @@ Play.prototype = {
             this.pills.add(new BonusPill(this.game, x, y));
             break;
           case 'A':
-            this.playerA = new Player(this.game, x, y, 'player-a', 0);
+            this.playerA = new Player(this.game, x, y, 'player-a', 0, 'omSound');
             this.players.add(this.playerA);
             break;
           case 'B':
-            this.playerB = new Player(this.game, x, y, 'player-b', 0);
+            this.playerB = new Player(this.game, x, y, 'player-b', 0, 'nomSound');
             this.players.add(this.playerB);
             break;
         }
       }
     }
+
+    var maxScore = 0;
+    this.pills.forEach(function(pill) {
+      maxScore += pill.score;
+    }, this);
+
+    this.players.forEach(function(player) {
+      player.maxScore = maxScore;
+    }, this);
 
     this.walls.forEach(function(wall) {
       this.addToMap(wall.x, wall.y);
@@ -209,6 +217,7 @@ Play.prototype = {
   playerPillCollision: function(player, pill) {
     player.score += pill.score;
     pill.destroy();
+    player.scoreSound.play();
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');

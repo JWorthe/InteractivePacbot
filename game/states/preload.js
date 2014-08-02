@@ -20,9 +20,13 @@ Preload.prototype = {
 
     this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('omSound', 'assets/audio/om.ogg', true);
 
     this.load.bitmapFont('spaced-scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('nomSound', 'assets/audio/nom.ogg', true);
+
+
 
     this.load.text('level', 'assets/levels/maze.lvl');
   },
