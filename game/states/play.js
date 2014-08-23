@@ -210,8 +210,7 @@ Play.prototype = {
     var newY = player.y + deltaY;
 
     if (!this.checkMap(newX, newY) && player.isMyTurn && !player.moving) {
-      player.move(newX, newY);
-      this.togglePlayerTurn();
+      player.move(newX, newY, this.togglePlayerTurn, this);
     }
   },
   playerPillCollision: function(player, pill) {

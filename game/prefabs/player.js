@@ -46,12 +46,18 @@ Player.prototype.update = function() {
   }
 };
 
-Player.prototype.move = function(newX, newY) {
+Player.prototype.move = function(newX, newY, callback, callbackContext) {
   this.moving = true;
   var tween = this.game.add.tween(this).to({x: newX, y: newY}, 500);
   tween.onComplete.add(this.finishMovement, this);
+  tween.onComplete.add(callback, callbackContext);
   tween.start();
 };
+
+Player.prototype.teleport = function(newX, newY) {
+  this.x = newX;
+  this.y = newY;
+}
 
 Player.prototype.finishMovement = function() {
   this.moving = false;
