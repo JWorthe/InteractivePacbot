@@ -12,8 +12,6 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.scale = {x: 0.01, y: 0.01};
   this.anchor = {x: 0.5, y: 0.5};
 
-  this.game.physics.arcade.enableBody(this);
-
   this.score = 0;
   this.maxScore = 1;
   this.isMyTurn = false;
@@ -49,8 +47,8 @@ Player.prototype.update = function() {
 Player.prototype.move = function(newX, newY, callback, callbackContext) {
   this.moving = true;
   var tween = this.game.add.tween(this).to({x: newX, y: newY}, 500);
-  tween.onComplete.add(this.finishMovement, this);
   tween.onComplete.add(callback, callbackContext);
+  tween.onComplete.add(this.finishMovement, this);
   tween.start();
 };
 
@@ -61,6 +59,10 @@ Player.prototype.teleport = function(newX, newY) {
 
 Player.prototype.finishMovement = function() {
   this.moving = false;
+};
+
+Player.prototype.getBounds = function() {
+  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
 };
 
 module.exports = Player;

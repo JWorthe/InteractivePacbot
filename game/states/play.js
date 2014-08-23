@@ -41,15 +41,17 @@ Play.prototype = {
 
     this.setupPlayerControls();
 
-    this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
     this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
     this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 4.5, -0.4, 'spaced-scorefont-b','0',2);
 
     this.gameWon = false;
   },
   update: function() {
-    this.game.physics.arcade.overlap(this.players, this.pills, this.playerPillCollision, null, this);
+    this.checkForPlayerPillCollisions();
+
+    if (Phaser.Rectangle.intersects(this.playerA.getBounds(), this.playerB.getBounds())) {
+      this.playerPlayerCollision(this.playerA, this.playerB);
+    }
 
     if (!this.gameWon && this.pills.total === 0) {
       this.gameWon = true;
@@ -71,6 +73,21 @@ Play.prototype = {
     }
 
     this.pollPlayerInput();
+  },
+  checkForPlayerPillCollisions: function() {
+    var pillCollisions = [];
+    this.players.forEach(function(player) {
+      var playerBounds = player.getBounds();
+      this.pills.forEach(function(pill) {
+        var pillBounds = pill.getBounds();
+        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
+          pillCollisions.push({player:player, pill:pill});
+        }
+      }, this);
+    }, this);
+    for (var i=0; i<pillCollisions.length; i++) {
+      this.playerPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
+    }
   },
   pollPlayerInput: function() {
     if (this.game.input.gamepad.pad1.connected) {
@@ -220,6 +237,14 @@ Play.prototype = {
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');
+  },
+  playerPlayerCollision: function(playerA, playerB) {
+    var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
+
+    var respawnX = Math.ceil(this.map.length/2)-1;
+    var respawnY = Math.ceil(this.map[0].length/2)-1;
+
+    eatenPlayer.teleport(respawnX, respawnY);
   },
   togglePlayerTurn: function() {
     this.updatePlayerTurn((this.playerTurn+1)%this.players.length);
