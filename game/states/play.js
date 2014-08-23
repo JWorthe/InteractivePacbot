@@ -177,8 +177,16 @@ Play.prototype = {
       player.maxScore = maxScore;
     }, this);
 
+    this.gameWidth = 0;
+    this.gameHeight = 0;
     this.walls.forEach(function(wall) {
       this.addToMap(wall.x, wall.y);
+      if (wall.x >= this.gameWidth) {
+        this.gameWidth = wall.x+1;
+      }
+      if (wall.y >= this.gameHeight) {
+        this.gameHeight = wall.y+1;
+      }
     }, this);
     this.updatePlayerTurn(0);
   },
@@ -226,8 +234,37 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
 
-    if (!this.checkMap(newX, newY) && player.isMyTurn && !player.moving) {
+    if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
+      return;
+    }
+
+    var intermediateX = newX;
+    var teleportX = newX;
+    var intermediateY = newY;
+    var teleportY = newY;
+
+    if (newX >= this.gameWidth) {
+      newX = 0;
+      teleportX = -1;
+    }
+    if (newX < 0) {
+      newX = this.gameWidth-1;
+      teleportX = this.gameWidth;
+    }
+    if (newY >= this.gameHeight) {
+      newY = 0;
+      teleportY = -1;
+    }
+    if (newY < 0) {
+      newY = this.gameHeight-1;
+      teleportY = this.gameHeight;
+    }
+
+    if (newX === intermediateX && newY === intermediateY) {
       player.move(newX, newY, this.togglePlayerTurn, this);
+    }
+    else {
+      player.multistepMove(intermediateX, intermediateY, teleportX, teleportY, newX, newY, this.togglePlayerTurn, this);
     }
   },
   playerPillCollision: function(player, pill) {
@@ -241,8 +278,8 @@ Play.prototype = {
   playerPlayerCollision: function(playerA, playerB) {
     var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
 
-    var respawnX = Math.ceil(this.map.length/2)-1;
-    var respawnY = Math.ceil(this.map[0].length/2)-1;
+    var respawnX = Math.ceil(this.gameWidth/2)-1;
+    var respawnY = Math.ceil(this.gameHeight/2)-1;
 
     eatenPlayer.teleport(respawnX, respawnY);
   },
