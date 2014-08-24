@@ -19,6 +19,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
 
   this.hasPoisonPill = true;
   this.poisonPillActive = false;
+  this.lastTween = null;
 
   this.scoreSound = game.sound.add(soundKey);
 
@@ -54,6 +55,8 @@ Player.prototype.move = function(newX, newY, callback, callbackContext) {
   tween.onComplete.add(callback, callbackContext);
   tween.onComplete.add(this.finishMovement, this);
 
+  this.lastTween = tween;
+
   tween.start();
 };
 
@@ -77,6 +80,7 @@ Player.prototype.teleport = function(newX, newY) {
 
 Player.prototype.finishMovement = function() {
   this.moving = false;
+  this.lastTween = null;
 };
 
 Player.prototype.getBounds = function() {

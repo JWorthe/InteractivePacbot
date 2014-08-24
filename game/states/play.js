@@ -261,6 +261,13 @@ Play.prototype = {
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
+    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive;
+
+    var posionPillX = player.x;
+    var posionPillY = player.y;
+    if (placePoisonPill) {
+      player.hasPoisonPill = false;
+    }
 
     if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
       return;
@@ -289,10 +296,22 @@ Play.prototype = {
     }
 
     if (newX === intermediateX && newY === intermediateY) {
-      player.move(newX, newY, this.togglePlayerTurn, this);
+      player.move(newX, newY, function() {
+        if (placePoisonPill) {
+          this.poisonPills.add(new PoisonPill(this.game, posionPillX, posionPillY));
+          player.poisonPillActive = false;
+        }
+        this.togglePlayerTurn();
+      }, this);
     }
     else {
-      player.multistepMove(intermediateX, intermediateY, teleportX, teleportY, newX, newY, this.togglePlayerTurn, this);
+      player.multistepMove(intermediateX, intermediateY, teleportX, teleportY, newX, newY, function() {
+        if (placePoisonPill) {
+          this.poisonPills.add(new PoisonPill(this.game, posionPillX, posionPillY));
+          player.poisonPillActive = false;
+        }
+        this.togglePlayerTurn();
+      }, this);
     }
   },
   playerPillCollision: function(player, pill) {
@@ -304,12 +323,17 @@ Play.prototype = {
     this.playerBScoreText.setText(this.playerB.score+'');
   },
   playerPoisonPillCollision: function(player, poisonPill) {
-    poisonPill.destroy();
-
     var respawnX = Math.ceil(this.gameWidth/2)-1;
     var respawnY = Math.ceil(this.gameHeight/2)-1;
 
-    player.teleport(respawnX, respawnY);
+    if (player.lastTween) {
+      player.lastTween.onComplete.add(player.teleport.bind(player, respawnX, respawnY), player);
+    }
+    else {
+      player.teleport(respawnX, respawnY);
+    }
+
+    poisonPill.destroy();
   },
   playerPlayerCollision: function(playerA, playerB) {
     var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
