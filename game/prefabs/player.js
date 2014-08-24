@@ -17,6 +17,9 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.isMyTurn = false;
   this.animIsMyTurn = true;
 
+  this.hasPoisonPill = true;
+  this.poisonPillActive = false;
+
   this.scoreSound = game.sound.add(soundKey);
 
 

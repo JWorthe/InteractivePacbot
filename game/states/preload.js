@@ -17,6 +17,7 @@ Preload.prototype = {
     this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
     this.load.image('pill', 'assets/images/pill.svg');
     this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
+    this.load.image('poison-pill', 'assets/images/poison-pill.svg');
 
     this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
     this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');

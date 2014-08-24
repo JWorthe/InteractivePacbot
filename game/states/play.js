@@ -4,6 +4,7 @@ var Player = require('../prefabs/player');
 var Pill = require('../prefabs/pill');
 var BonusPill = require('../prefabs/bonusPill');
 var Wall = require('../prefabs/wall');
+var PoisonPill = require('../prefabs/poisonPill');
 
 function Play() {}
 
@@ -48,6 +49,7 @@ Play.prototype = {
   },
   update: function() {
     this.checkForPlayerPillCollisions();
+    this.checkForPlayerPoisonPillCollisions();
 
     if (Phaser.Rectangle.intersects(this.playerA.getBounds(), this.playerB.getBounds())) {
       this.playerPlayerCollision(this.playerA, this.playerB);
@@ -87,6 +89,21 @@ Play.prototype = {
     }, this);
     for (var i=0; i<pillCollisions.length; i++) {
       this.playerPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
+    }
+  },
+  checkForPlayerPoisonPillCollisions: function() {
+    var pillCollisions = [];
+    this.players.forEach(function(player) {
+      var playerBounds = player.getBounds();
+      this.poisonPills.forEach(function(pill) {
+        var pillBounds = pill.getBounds();
+        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
+          pillCollisions.push({player:player, pill:pill});
+        }
+      }, this);
+    }, this);
+    for (var i=0; i<pillCollisions.length; i++) {
+      this.playerPoisonPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
     }
   },
   pollPlayerInput: function() {
@@ -140,6 +157,7 @@ Play.prototype = {
     this.pills = this.game.add.group();
     this.players = this.game.add.group();
     this.walls = this.game.add.group();
+    this.poisonPills = this.game.add.group();
 
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
@@ -196,13 +214,15 @@ Play.prototype = {
       up: Phaser.Keyboard.W,
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
-      right: Phaser.Keyboard.D
+      right: Phaser.Keyboard.D,
+      poison: Phaser.Keyboard.Q
     };
     this.playerBControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
       down: Phaser.Keyboard.DOWN,
-      right: Phaser.Keyboard.RIGHT
+      right: Phaser.Keyboard.RIGHT,
+      poison: Phaser.Keyboard.ENTER
     };
 
     function addKeyCaptures(controls, keyboard) {
@@ -229,6 +249,14 @@ Play.prototype = {
     this.game.orientation.onDown.add(function() {
       this.movePlayer(this.players.children[this.playerTurn], 0, 1);
     }, this);
+
+    this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
+    this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
+  },
+  togglePoisonPill: function(player) {
+    if (player.hasPoisonPill) {
+      player.poisonPillActive = !player.poisonPillActive;
+    }
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -274,6 +302,14 @@ Play.prototype = {
 
     this.playerAScoreText.setText(this.playerA.score+'');
     this.playerBScoreText.setText(this.playerB.score+'');
+  },
+  playerPoisonPillCollision: function(player, poisonPill) {
+    poisonPill.destroy();
+
+    var respawnX = Math.ceil(this.gameWidth/2)-1;
+    var respawnY = Math.ceil(this.gameHeight/2)-1;
+
+    player.teleport(respawnX, respawnY);
   },
   playerPlayerCollision: function(playerA, playerB) {
     var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
