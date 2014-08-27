@@ -6,6 +6,8 @@ var Player = function(game, x, y, key, frame, soundKey) {
   Phaser.Sprite.call(this, game, x, y, key, frame);
   this.animations.add('active', [0]);
   this.animations.add('waiting', [1]);
+  this.animations.add('activePoison', [2]);
+  this.animations.add('waitingPoison', [3]);
 
   this.baseKey = key;
   this.moving = false;
@@ -15,7 +17,11 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.score = 0;
   this.maxScore = 1;
   this.isMyTurn = false;
-  this.animIsMyTurn = true;
+
+  this.currentAnimation = {
+    isMyTurn: true,
+    poisonPillActive: false
+  }
 
   this.hasPoisonPill = true;
   this.poisonPillActive = false;
@@ -42,9 +48,28 @@ Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
-  if (this.isMyTurn !== this.animIsMyTurn) {
-    this.animIsMyTurn = this.isMyTurn;
-    this.play(this.animIsMyTurn ? 'active' : 'waiting');
+  if (this.isMyTurn !== this.currentAnimation.isMyTurn || this.poisonPillActive !== this.currentAnimation.poisonPillActive) {
+    this.currentAnimation.isMyTurn = this.isMyTurn;
+    this.currentAnimation.poisonPillActive = this.poisonPillActive;
+
+    var animation;
+    if (!this.currentAnimation.isMyTurn) {
+      if (!this.currentAnimation.poisonPillActive) {
+        animation = 'waiting';
+      }
+      else {
+        animation = 'waitingPoison'
+      }
+    }
+    else {
+      if (!this.currentAnimation.poisonPillActive) {
+        animation = 'active';
+      }
+      else {
+        animation = 'activePoison'
+      }
+    }
+    this.play(animation);
   }
 };
 

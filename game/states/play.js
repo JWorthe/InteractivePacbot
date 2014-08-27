@@ -262,6 +262,9 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
     var placePoisonPill = player.hasPoisonPill && player.poisonPillActive;
+    if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
+      return;
+    }
 
     var posionPillX = player.x;
     var posionPillY = player.y;
@@ -269,9 +272,7 @@ Play.prototype = {
       player.hasPoisonPill = false;
     }
 
-    if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
-      return;
-    }
+
 
     var intermediateX = newX;
     var teleportX = newX;

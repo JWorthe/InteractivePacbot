@@ -1,7 +1,6 @@
 TODO
 ====
 
-* Add visual representation for players ready to drop poison pills
 * Add restrictions on movement into the center
 * Add tutorial / instructions page
 * Add reset / end game early mechanism
