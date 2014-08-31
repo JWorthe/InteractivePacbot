@@ -20,4 +20,6 @@ html, body, #interactive-pacbot {
   max-width: 100%;
   height: auto;
   width: auto;
+
+  cursor: none !important;
 }
