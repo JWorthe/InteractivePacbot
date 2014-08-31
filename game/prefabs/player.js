@@ -25,6 +25,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
 
   this.hasPoisonPill = true;
   this.poisonPillActive = false;
+  this.gamepadPoisonLastPressed = Number.NEGATIVE_INFINITY;
   this.lastTween = null;
 
   this.scoreSound = game.sound.add(soundKey);

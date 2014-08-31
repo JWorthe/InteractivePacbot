@@ -152,6 +152,12 @@ Play.prototype = {
     if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.2) {
       this.movePlayer(player, 0, 1);
     }
+
+    var poisonButton = pad.getButton(Phaser.Gamepad.XBOX360_A);
+    if (poisonButton.isDown && player.gamepadPoisonLastPressed < poisonButton.timeDown) {
+      player.gamepadPoisonLastPressed = poisonButton.timeDown;
+      this.togglePoisonPill(player);
+    }
   },
   readLevelFile: function() {
     this.pills = this.game.add.group();
