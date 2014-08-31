@@ -341,6 +341,7 @@ Play.prototype = {
     }
 
     poisonPill.destroy();
+    player.respawnSound.play();
   },
   playerPlayerCollision: function(playerA, playerB) {
     var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
@@ -348,7 +349,13 @@ Play.prototype = {
     var respawnX = Math.ceil(this.gameWidth/2)-1;
     var respawnY = Math.ceil(this.gameHeight/2)-1;
 
-    eatenPlayer.teleport(respawnX, respawnY);
+    if (eatenPlayer.lastTween) {
+      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, respawnX, respawnY), eatenPlayer);
+    }
+    else {
+      eatenPlayer.teleport(respawnX, respawnY);
+    }
+    eatenPlayer.respawnSound.play();
   },
   togglePlayerTurn: function() {
     this.updatePlayerTurn((this.playerTurn+1)%this.players.length);

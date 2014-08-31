@@ -29,6 +29,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.lastTween = null;
 
   this.scoreSound = game.sound.add(soundKey);
+  this.respawnSound = game.sound.add('owSound');
 
 
   //BEWARE! HORRIBLE HACK AHEAD!

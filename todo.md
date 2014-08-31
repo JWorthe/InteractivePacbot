@@ -5,7 +5,5 @@ TODO
 * Add tutorial / instructions page
 * Add reset / end game early mechanism
 * Regenerate fonts with new colours
-* Sound effect for playing being eaten
-* Sound effect for player eating poison pill
 * Add reading controls from file
 * Refine orientation controls

@@ -27,7 +27,7 @@ Preload.prototype = {
     this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
     this.load.audio('nomSound', 'assets/audio/nom.ogg', true);
 
-
+    this.load.audio('owSound', 'assets/audio/ow.ogg', true);
 
     this.load.text('level', 'assets/levels/maze.lvl');
   },
