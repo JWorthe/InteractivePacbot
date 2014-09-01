@@ -189,7 +189,10 @@ Play.prototype = {
             this.playerB = new Player(this.game, x, y, 'player-b', 0, 'nomSound');
             this.players.add(this.playerB);
             break;
-        }
+          case '|':
+            this.addToMap(x, y);
+            break;
+          }
       }
     }
 
