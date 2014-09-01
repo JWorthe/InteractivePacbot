@@ -275,14 +275,26 @@ Play.prototype = {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
     var placePoisonPill = player.hasPoisonPill && player.poisonPillActive;
+
+    //cannot move into walls, when it isn't your turn, or when you're already moving
     if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
       return;
     }
 
-    if (Math.abs(newX-this.respawnX)<=1 && Math.abs(newY-this.respawnY)<=1 && (
-      Math.abs(newX-this.respawnX)<Math.abs(player.x-this.respawnX) ||
-      Math.abs(newY-this.respawnY)<Math.abs(player.y-this.respawnY))) {
-      return;
+    if (Math.abs(newX-this.respawnX)<=1 && Math.abs(newY-this.respawnY)<=1) {
+      //cannot move into respawn area
+      if (Math.abs(newX-this.respawnX)<Math.abs(player.x-this.respawnX) ||
+          Math.abs(newY-this.respawnY)<Math.abs(player.y-this.respawnY)) {
+        return;
+      }
+
+      //cannot eat opponent when leaving respawn block
+      for (var playerIndex=0; playerIndex<this.players.children.length; ++playerIndex) {
+        var opponent = this.players.children[playerIndex];
+        if (Math.abs(newX-opponent.x)<0.1 && Math.abs(newY-opponent.y)<0.1) {
+          return;
+        }
+      }
     }
 
     var posionPillX = player.x;
