@@ -9,28 +9,6 @@ var PoisonPill = require('../prefabs/poisonPill');
 function Play() {}
 
 Play.prototype = {
-  addToMap: function(x, y) {
-    if (!this.map) {
-      this.map = [];
-    }
-    if (!this.map[x]) {
-      this.map[x] = [];
-    }
-
-    this.map[x][y] = true;
-  },
-  removeFromMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return;
-    }
-    this.map[x][y] = false;
-  },
-  checkMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return false;
-    }
-    return this.map[x][y];
-  },
   preload: function() {
   },
   create: function() {
@@ -76,6 +54,29 @@ Play.prototype = {
 
     this.pollPlayerInput();
   },
+  addToMap: function(x, y) {
+    if (!this.map) {
+      this.map = [];
+    }
+    if (!this.map[x]) {
+      this.map[x] = [];
+    }
+
+    this.map[x][y] = true;
+  },
+  removeFromMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return;
+    }
+    this.map[x][y] = false;
+  },
+  checkMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return false;
+    }
+    return this.map[x][y];
+  },
+
   checkForPlayerPillCollisions: function() {
     var pillCollisions = [];
     this.players.forEach(function(player) {
@@ -212,6 +213,9 @@ Play.prototype = {
         this.gameHeight = wall.y+1;
       }
     }, this);
+    this.respawnX = Math.ceil(this.gameWidth/2)-1;
+    this.respawnY = Math.ceil(this.gameHeight/2)-1;
+
     this.updatePlayerTurn(0);
   },
 
@@ -272,13 +276,17 @@ Play.prototype = {
       return;
     }
 
+    if (Math.abs(newX-this.respawnX)<=1 && Math.abs(newY-this.respawnY)<=1 && (
+      Math.abs(newX-this.respawnX)<Math.abs(player.x-this.respawnX) ||
+      Math.abs(newY-this.respawnY)<Math.abs(player.y-this.respawnY))) {
+      return;
+    }
+
     var posionPillX = player.x;
     var posionPillY = player.y;
     if (placePoisonPill) {
       player.hasPoisonPill = false;
     }
-
-
 
     var intermediateX = newX;
     var teleportX = newX;
@@ -330,14 +338,11 @@ Play.prototype = {
     this.playerBScoreText.setText(this.playerB.score+'');
   },
   playerPoisonPillCollision: function(player, poisonPill) {
-    var respawnX = Math.ceil(this.gameWidth/2)-1;
-    var respawnY = Math.ceil(this.gameHeight/2)-1;
-
     if (player.lastTween) {
-      player.lastTween.onComplete.add(player.teleport.bind(player, respawnX, respawnY), player);
+      player.lastTween.onComplete.add(player.teleport.bind(player, this.respawnX, this.respawnY), player);
     }
     else {
-      player.teleport(respawnX, respawnY);
+      player.teleport(this.respawnX, this.respawnY);
     }
 
     poisonPill.destroy();
@@ -346,14 +351,11 @@ Play.prototype = {
   playerPlayerCollision: function(playerA, playerB) {
     var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
 
-    var respawnX = Math.ceil(this.gameWidth/2)-1;
-    var respawnY = Math.ceil(this.gameHeight/2)-1;
-
     if (eatenPlayer.lastTween) {
-      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, respawnX, respawnY), eatenPlayer);
+      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, this.respawnX, this.respawnY), eatenPlayer);
     }
     else {
-      eatenPlayer.teleport(respawnX, respawnY);
+      eatenPlayer.teleport(this.respawnX, this.respawnY);
     }
     eatenPlayer.respawnSound.play();
   },
