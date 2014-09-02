@@ -29,7 +29,7 @@ Play.prototype = {
     this.checkForPlayerPillCollisions();
     this.checkForPlayerPoisonPillCollisions();
 
-    if (this.playerA.canBeEaten && this.playerB.canBeEayen &&
+    if (this.playerA.canBeEaten && this.playerB.canBeEaten &&
       Phaser.Rectangle.intersects(this.playerA.getBounds(), this.playerB.getBounds())) {
       this.playerPlayerCollision(this.playerA, this.playerB);
     }
@@ -275,7 +275,7 @@ Play.prototype = {
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
-    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive;
+    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive && (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
 
     //cannot move into walls, when it isn't your turn, or when you're already moving
     if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
