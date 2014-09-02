@@ -29,7 +29,8 @@ Play.prototype = {
     this.checkForPlayerPillCollisions();
     this.checkForPlayerPoisonPillCollisions();
 
-    if (Phaser.Rectangle.intersects(this.playerA.getBounds(), this.playerB.getBounds())) {
+    if (this.playerA.canBeEaten && this.playerB.canBeEayen &&
+      Phaser.Rectangle.intersects(this.playerA.getBounds(), this.playerB.getBounds())) {
       this.playerPlayerCollision(this.playerA, this.playerB);
     }
 
@@ -372,6 +373,7 @@ Play.prototype = {
     else {
       eatenPlayer.teleport(this.respawnX, this.respawnY);
     }
+    eatenPlayer.canBeEaten = false;
     eatenPlayer.respawnSound.play();
   },
   togglePlayerTurn: function() {
@@ -381,6 +383,7 @@ Play.prototype = {
     this.playerTurn = newPlayerTurn;
     for (var i=0; i<this.players.children.length; ++i) {
       this.players.children[i].isMyTurn = (i === this.playerTurn);
+      this.players.children[i].canBeEaten = true;
     }
   },
   setVictoryText: function(newText, winnerLetter) {

@@ -17,6 +17,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.score = 0;
   this.maxScore = 1;
   this.isMyTurn = false;
+  this.canBeEaten = true;
 
   this.currentAnimation = {
     isMyTurn: true,
