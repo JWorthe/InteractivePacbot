@@ -238,6 +238,9 @@ Play.prototype = {
       right: Phaser.Keyboard.RIGHT,
       poison: Phaser.Keyboard.ENTER
     };
+    this.controls = {
+      reset: Phaser.Keyboard.ESC
+    };
 
     function addKeyCaptures(controls, keyboard) {
       for (var index in controls) {
@@ -248,6 +251,7 @@ Play.prototype = {
     }
     addKeyCaptures(this.playerAControls, this.game.input.keyboard);
     addKeyCaptures(this.playerBControls, this.game.input.keyboard);
+    addKeyCaptures(this.controls, this.game.input.keyboard);
 
     this.game.input.gamepad.start();
 
@@ -266,6 +270,10 @@ Play.prototype = {
 
     this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
     this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
+
+    this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
+      this.game.state.start('play');
+    },this);
   },
   togglePoisonPill: function(player) {
     if (player.hasPoisonPill) {
@@ -400,6 +408,8 @@ Play.prototype = {
     this.game.input.keyboard.removeKey(this.playerBControls.down);
     this.game.input.keyboard.removeKey(this.playerBControls.left);
     this.game.input.keyboard.removeKey(this.playerBControls.right);
+
+    this.game.input.keyboard.removeKey(this.controls.reset);
   }
 };
 
