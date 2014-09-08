@@ -228,14 +228,14 @@ Play.prototype = {
   },
 
   setupPlayerControls: function() {
-    this.playerAControls = {
+    this.playerBControls = {
       up: Phaser.Keyboard.W,
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
       right: Phaser.Keyboard.D,
       poison: Phaser.Keyboard.Q
     };
-    this.playerBControls = {
+    this.playerAControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
       down: Phaser.Keyboard.DOWN,
