@@ -33,6 +33,8 @@ Preload.prototype = {
 
     this.load.image('hud-bg', 'assets/images/hud-bg.svg');
     this.load.image('controller-diagram', 'assets/images/controller-diagram.svg');
+    this.load.image('keys-a', 'assets/images/keyboard-control-a.svg');
+    this.load.image('keys-b', 'assets/images/keyboard-control-b.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;

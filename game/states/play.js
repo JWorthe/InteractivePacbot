@@ -23,8 +23,8 @@ Play.prototype = {
 
     this.gameWon = false;
 
-    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a');
-    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b');
+    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
+    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
     //this.game.add.existing(this.hudA);
     //this.game.add.existing(this.hudB);
 

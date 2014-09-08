@@ -1,6 +1,6 @@
 'use strict';
 
-var Hud = function(game, player, x, y, scorefontKey) {
+var Hud = function(game, player, x, y, scorefontKey, keyboardSpriteKey) {
     Phaser.Group.call(this, game);
     this.x = x;
     this.y = y;
@@ -22,7 +22,9 @@ var Hud = function(game, player, x, y, scorefontKey) {
     this.controllerDiagram.scale = {x: 0.5, y: 0.5};
     this.add(this.controllerDiagram);
 
-    this.sendToBack(this.background);
+    this.keyboardControls = new Phaser.Sprite(this.game, 0, 600, keyboardSpriteKey);
+    this.keyboardControls.scale = {x: 0.5, y: 0.5};
+    this.add(this.keyboardControls);
 
     this.currentScore = 0;
 };
