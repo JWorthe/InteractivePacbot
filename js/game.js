@@ -3,7 +3,7 @@
 
 //global variables
 window.onload = function () {
-  var game = new Phaser.Game(1100, 950, Phaser.AUTO, 'interactive-pacbot');
+  var game = new Phaser.Game(1750, 1100, Phaser.AUTO, 'interactive-pacbot');
 
   var Orientation = require('./plugins/orientation');
   game.orientation = new Orientation();
@@ -18,7 +18,7 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./plugins/orientation":2,"./states/boot":8,"./states/gameover":9,"./states/menu":10,"./states/play":11,"./states/preload":12}],2:[function(require,module,exports){
+},{"./plugins/orientation":2,"./states/boot":9,"./states/gameover":10,"./states/menu":11,"./states/play":12,"./states/preload":13}],2:[function(require,module,exports){
 'use strict';
 
 var Orientation = function() {
@@ -83,6 +83,58 @@ module.exports = BonusPill;
 },{}],4:[function(require,module,exports){
 'use strict';
 
+var Hud = function(game, player, x, y, scorefontKey, keyboardSpriteKey) {
+    Phaser.Group.call(this, game);
+    this.x = x;
+    this.y = y;
+    this.player = player;
+    this.scale = {x: 0.02, y: 0.02};
+
+
+    this.background = new Phaser.Sprite(this.game, 0, 0, 'hud-bg');
+    this.add(this.background);
+    this.scoreText = new Phaser.BitmapText(this.game, 172, 10, scorefontKey, '0', 100);
+    this.add(this.scoreText);
+
+    this.poisonIndicator = new Phaser.Sprite(this.game, 200, 150, 'poison-pill');
+    //this.poisonIndicator.scale = {0.1, 0.1};
+    this.poisonIndicator.anchor = {x:0.5, y:0.5};
+    this.add(this.poisonIndicator);
+
+    this.controllerDiagram = new Phaser.Sprite(this.game, 0, 300, 'controller-diagram');
+    this.controllerDiagram.scale = {x: 0.5, y: 0.5};
+    this.add(this.controllerDiagram);
+
+    this.keyboardControls = new Phaser.Sprite(this.game, 0, 600, keyboardSpriteKey);
+    this.keyboardControls.scale = {x: 0.5, y: 0.5};
+    this.add(this.keyboardControls);
+
+    this.currentScore = 0;
+};
+
+Hud.prototype = Object.create(Phaser.Group.prototype);
+Hud.prototype.constructor = Hud;
+
+Hud.prototype.update = function() {
+    if (this.currentScore !== this.player.score) {
+        this.currentScore = this.player.score;
+        this.scoreText.setText(this.player.score+'');
+
+        var numberOfDigits = Math.floor(Math.log(this.currentScore)/Math.log(10))+1;
+        this.scoreText.x = 200 - numberOfDigits*30;
+    }
+
+    if (this.poisonIndicator && !this.player.hasPoisonPill) {
+        this.poisonIndicator.destroy();
+        this.poisonIndicator = null;
+    }
+};
+
+module.exports = Hud;
+
+},{}],5:[function(require,module,exports){
+'use strict';
+
 var Pill = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'pill', frame);
   this.scale = {x: 0.01, y: 0.01};
@@ -100,7 +152,7 @@ Pill.prototype.getBounds = function() {
 
 module.exports = Pill;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var Player = function(game, x, y, key, frame, soundKey) {
@@ -220,7 +272,7 @@ Player.prototype.getBounds = function() {
 
 module.exports = Player;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var PoisonPill = function(game, x, y, frame) {
@@ -240,7 +292,7 @@ PoisonPill.prototype.getBounds = function() {
 
 module.exports = PoisonPill;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 var Wall = function(game, x, y, frame) {
@@ -254,7 +306,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -272,7 +324,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 function GameOver() {}
@@ -288,7 +340,7 @@ GameOver.prototype = {
 
 module.exports = GameOver;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 function Menu() {}
@@ -304,7 +356,7 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 var Player = require('../prefabs/player');
@@ -312,6 +364,7 @@ var Pill = require('../prefabs/pill');
 var BonusPill = require('../prefabs/bonusPill');
 var Wall = require('../prefabs/wall');
 var PoisonPill = require('../prefabs/poisonPill');
+var Hud = require('../prefabs/hud');
 
 function Play() {}
 
@@ -322,15 +375,18 @@ Play.prototype = {
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
-    this.world.bounds = {x: -25, y:-25, width: this.game.width, height: this.game.height};
+    this.world.bounds = {x: -425, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
     this.setupPlayerControls();
 
-    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 4.5, -0.4, 'spaced-scorefont-b','0',2);
-
     this.gameWon = false;
+
+    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
+    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
+    //this.game.add.existing(this.hudA);
+    //this.game.add.existing(this.hudB);
+
   },
   update: function() {
     this.checkForPlayerPillCollisions();
@@ -477,9 +533,9 @@ Play.prototype = {
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
-    for (var x=0; x<splitRows.length; x++) {
-      for (var y=0; y<splitRows[x].length; y++) {
-        switch(splitRows[x][y]) {
+    for (var y=0; y<splitRows.length; y++) {
+      for (var x=0; x<splitRows[y].length; x++) {
+        switch(splitRows[y][x]) {
           case '#':
             this.walls.add(new Wall(this.game, x, y));
             break;
@@ -527,23 +583,26 @@ Play.prototype = {
     this.respawnX = Math.ceil(this.gameWidth/2)-1;
     this.respawnY = Math.ceil(this.gameHeight/2)-1;
 
-    this.updatePlayerTurn(0);
+    this.playerB.isMyTurn = true;
   },
 
   setupPlayerControls: function() {
-    this.playerAControls = {
+    this.playerBControls = {
       up: Phaser.Keyboard.W,
       left: Phaser.Keyboard.A,
       down: Phaser.Keyboard.S,
       right: Phaser.Keyboard.D,
       poison: Phaser.Keyboard.Q
     };
-    this.playerBControls = {
+    this.playerAControls = {
       up: Phaser.Keyboard.UP,
       left: Phaser.Keyboard.LEFT,
       down: Phaser.Keyboard.DOWN,
       right: Phaser.Keyboard.RIGHT,
       poison: Phaser.Keyboard.ENTER
+    };
+    this.controls = {
+      reset: Phaser.Keyboard.ESC
     };
 
     function addKeyCaptures(controls, keyboard) {
@@ -555,29 +614,36 @@ Play.prototype = {
     }
     addKeyCaptures(this.playerAControls, this.game.input.keyboard);
     addKeyCaptures(this.playerBControls, this.game.input.keyboard);
+    addKeyCaptures(this.controls, this.game.input.keyboard);
 
     this.game.input.gamepad.start();
 
-    this.game.orientation.onLeft.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], -1, 0);
-    }, this);
-    this.game.orientation.onRight.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 1, 0);
-    }, this);
-    this.game.orientation.onUp.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 0, -1);
-    }, this);
-    this.game.orientation.onDown.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 0, 1);
-    }, this);
+    this.game.orientation.onLeft.add(this.moveActivePlayer.bind(this, -1, 0), this);
+    this.game.orientation.onRight.add(this.moveActivePlayer.bind(this, 1, 0), this);
+    this.game.orientation.onUp.add(this.moveActivePlayer.bind(this, 0, -1), this);
+    this.game.orientation.onDown.add(this.moveActivePlayer.bind(this, 0, 1), this);
 
     this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
     this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
+
+    this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
+      this.game.state.start('play');
+    },this);
   },
   togglePoisonPill: function(player) {
     if (player.hasPoisonPill) {
       player.poisonPillActive = !player.poisonPillActive;
     }
+  },
+  moveActivePlayer: function(deltaX, deltaY) {
+    var activePlayer = null;
+    for (var i=0; i<this.players.children.length; ++i) {
+      if (this.players.children[i].isMyTurn) {
+        activePlayer = this.players.children[i];
+      }
+    }
+
+    movePlayer(activePlayer, deltaX, deltaY);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -656,9 +722,6 @@ Play.prototype = {
     player.score += pill.score;
     pill.destroy();
     player.scoreSound.play();
-
-    this.playerAScoreText.setText(this.playerA.score+'');
-    this.playerBScoreText.setText(this.playerB.score+'');
   },
   playerPoisonPillCollision: function(player, poisonPill) {
     if (player.lastTween) {
@@ -684,14 +747,11 @@ Play.prototype = {
     eatenPlayer.respawnSound.play();
   },
   togglePlayerTurn: function() {
-    this.updatePlayerTurn((this.playerTurn+1)%this.players.length);
-  },
-  updatePlayerTurn: function(newPlayerTurn) {
-    this.playerTurn = newPlayerTurn;
     for (var i=0; i<this.players.children.length; ++i) {
-      this.players.children[i].isMyTurn = (i === this.playerTurn);
+      this.players.children[i].isMyTurn = !this.players.children[i].isMyTurn;
       this.players.children[i].canBeEaten = true;
     }
+    this.players.sort('isMyTurn');
   },
   setVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
@@ -707,12 +767,14 @@ Play.prototype = {
     this.game.input.keyboard.removeKey(this.playerBControls.down);
     this.game.input.keyboard.removeKey(this.playerBControls.left);
     this.game.input.keyboard.removeKey(this.playerBControls.right);
+
+    this.game.input.keyboard.removeKey(this.controls.reset);
   }
 };
 
 module.exports = Play;
 
-},{"../prefabs/bonusPill":3,"../prefabs/pill":4,"../prefabs/player":5,"../prefabs/poisonPill":6,"../prefabs/wall":7}],12:[function(require,module,exports){
+},{"../prefabs/bonusPill":3,"../prefabs/hud":4,"../prefabs/pill":5,"../prefabs/player":6,"../prefabs/poisonPill":7,"../prefabs/wall":8}],13:[function(require,module,exports){
 'use strict';
 
 function Preload() {
@@ -745,6 +807,11 @@ Preload.prototype = {
     this.load.audio('owSound', 'assets/audio/ow.ogg', true);
 
     this.load.text('level', 'assets/levels/maze.lvl');
+
+    this.load.image('hud-bg', 'assets/images/hud-bg.svg');
+    this.load.image('controller-diagram', 'assets/images/controller-diagram.svg');
+    this.load.image('keys-a', 'assets/images/keyboard-control-a.svg');
+    this.load.image('keys-b', 'assets/images/keyboard-control-b.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;
