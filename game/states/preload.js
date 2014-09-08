@@ -30,6 +30,9 @@ Preload.prototype = {
     this.load.audio('owSound', 'assets/audio/ow.ogg', true);
 
     this.load.text('level', 'assets/levels/maze.lvl');
+
+    this.load.image('hud-bg', 'assets/images/hud-bg.svg');
+    this.load.image('controller-diagram', 'assets/images/controller-diagram.svg');
   },
   create: function() {
     this.asset.cropEnabled = false;

@@ -5,6 +5,7 @@ var Pill = require('../prefabs/pill');
 var BonusPill = require('../prefabs/bonusPill');
 var Wall = require('../prefabs/wall');
 var PoisonPill = require('../prefabs/poisonPill');
+var Hud = require('../prefabs/hud');
 
 function Play() {}
 
@@ -15,15 +16,18 @@ Play.prototype = {
     this.readLevelFile();
 
     this.world.scale = {x:50, y:50};
-    this.world.bounds = {x: -25, y:-25, width: this.game.width, height: this.game.height};
+    this.world.bounds = {x: -425, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
     this.setupPlayerControls();
 
-    this.playerAScoreText = this.game.add.bitmapText(-0.1, -0.4, 'spaced-scorefont-a','0',2);
-    this.playerBScoreText = this.game.add.bitmapText(this.world.width/this.world.scale.x - 4.5, -0.4, 'spaced-scorefont-b','0',2);
-
     this.gameWon = false;
+
+    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a');
+    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b');
+    //this.game.add.existing(this.hudA);
+    //this.game.add.existing(this.hudB);
+
   },
   update: function() {
     this.checkForPlayerPillCollisions();
@@ -170,9 +174,9 @@ Play.prototype = {
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
-    for (var x=0; x<splitRows.length; x++) {
-      for (var y=0; y<splitRows[x].length; y++) {
-        switch(splitRows[x][y]) {
+    for (var y=0; y<splitRows.length; y++) {
+      for (var x=0; x<splitRows[y].length; x++) {
+        switch(splitRows[y][x]) {
           case '#':
             this.walls.add(new Wall(this.game, x, y));
             break;
@@ -220,7 +224,7 @@ Play.prototype = {
     this.respawnX = Math.ceil(this.gameWidth/2)-1;
     this.respawnY = Math.ceil(this.gameHeight/2)-1;
 
-    this.updatePlayerTurn(0);
+    this.playerB.isMyTurn = true;
   },
 
   setupPlayerControls: function() {
@@ -255,18 +259,10 @@ Play.prototype = {
 
     this.game.input.gamepad.start();
 
-    this.game.orientation.onLeft.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], -1, 0);
-    }, this);
-    this.game.orientation.onRight.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 1, 0);
-    }, this);
-    this.game.orientation.onUp.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 0, -1);
-    }, this);
-    this.game.orientation.onDown.add(function() {
-      this.movePlayer(this.players.children[this.playerTurn], 0, 1);
-    }, this);
+    this.game.orientation.onLeft.add(this.moveActivePlayer.bind(this, -1, 0), this);
+    this.game.orientation.onRight.add(this.moveActivePlayer.bind(this, 1, 0), this);
+    this.game.orientation.onUp.add(this.moveActivePlayer.bind(this, 0, -1), this);
+    this.game.orientation.onDown.add(this.moveActivePlayer.bind(this, 0, 1), this);
 
     this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
     this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
@@ -279,6 +275,16 @@ Play.prototype = {
     if (player.hasPoisonPill) {
       player.poisonPillActive = !player.poisonPillActive;
     }
+  },
+  moveActivePlayer: function(deltaX, deltaY) {
+    var activePlayer = null;
+    for (var i=0; i<this.players.children.length; ++i) {
+      if (this.players.children[i].isMyTurn) {
+        activePlayer = this.players.children[i];
+      }
+    }
+
+    movePlayer(activePlayer, deltaX, deltaY);
   },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
@@ -357,9 +363,6 @@ Play.prototype = {
     player.score += pill.score;
     pill.destroy();
     player.scoreSound.play();
-
-    this.playerAScoreText.setText(this.playerA.score+'');
-    this.playerBScoreText.setText(this.playerB.score+'');
   },
   playerPoisonPillCollision: function(player, poisonPill) {
     if (player.lastTween) {
@@ -385,14 +388,11 @@ Play.prototype = {
     eatenPlayer.respawnSound.play();
   },
   togglePlayerTurn: function() {
-    this.updatePlayerTurn((this.playerTurn+1)%this.players.length);
-  },
-  updatePlayerTurn: function(newPlayerTurn) {
-    this.playerTurn = newPlayerTurn;
     for (var i=0; i<this.players.children.length; ++i) {
-      this.players.children[i].isMyTurn = (i === this.playerTurn);
+      this.players.children[i].isMyTurn = !this.players.children[i].isMyTurn;
       this.players.children[i].canBeEaten = true;
     }
+    this.players.sort('isMyTurn');
   },
   setVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);

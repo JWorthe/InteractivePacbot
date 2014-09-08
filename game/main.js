@@ -2,7 +2,7 @@
 
 //global variables
 window.onload = function () {
-  var game = new Phaser.Game(1100, 950, Phaser.AUTO, 'interactive-pacbot');
+  var game = new Phaser.Game(1750, 1100, Phaser.AUTO, 'interactive-pacbot');
 
   var Orientation = require('./plugins/orientation');
   game.orientation = new Orientation();
