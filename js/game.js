@@ -384,8 +384,6 @@ Play.prototype = {
 
     this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
     this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
-    //this.game.add.existing(this.hudA);
-    //this.game.add.existing(this.hudB);
 
   },
   update: function() {
@@ -472,11 +470,11 @@ Play.prototype = {
     }
   },
   pollPlayerInput: function() {
-    if (this.game.input.gamepad.pad1.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerA);
-    }
     if (this.game.input.gamepad.pad2.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerB);
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerA);
+    }
+    if (this.game.input.gamepad.pad1.connected) {
+      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerB);
     }
 
     if (this.game.input.keyboard.isDown(this.playerAControls.up)) {
@@ -755,7 +753,7 @@ Play.prototype = {
   },
   setVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
-    this.victoryText.position.x = this.world.width/2/this.world.scale.x - this.victoryText.textWidth/2 - 0.5;
+    this.victoryText.position.x = (this.world.width/this.world.scale.x)/2 - 8 - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {
     this.game.input.keyboard.removeKey(this.playerAControls.up);
