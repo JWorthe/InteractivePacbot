@@ -1,17 +1,15 @@
 'use strict';
 
-var Player = require('../prefabs/player');
-var Pill = require('../prefabs/pill');
-var BonusPill = require('../prefabs/bonusPill');
-var Wall = require('../prefabs/wall');
-var PoisonPill = require('../prefabs/poisonPill');
-var Hud = require('../prefabs/hud');
+var Player = require('../entities/player');
+var Pill = require('../entities/pill');
+var BonusPill = require('../entities/bonusPill');
+var Wall = require('../entities/wall');
+var PoisonPill = require('../entities/poisonPill');
+var Hud = require('../entities/hud');
 
 function Play() {}
 
 Play.prototype = {
-  preload: function() {
-  },
   create: function() {
     this.readLevelFile();
 
