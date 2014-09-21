@@ -1,11 +1,11 @@
 'use strict';
 
-function Preload() {
+function Load() {
   this.asset = null;
   this.ready = false;
 }
 
-Preload.prototype = {
+Load.prototype = {
   preload: function() {
     this.asset = this.add.sprite(this.width/2,this.height/2, 'preloader');
     this.asset.anchor.setTo(0.5, 0.5);
@@ -49,4 +49,4 @@ Preload.prototype = {
   }
 };
 
-module.exports = Preload;
+module.exports = Load;

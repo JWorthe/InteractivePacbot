@@ -257,11 +257,6 @@ Play.prototype = {
 
     this.game.input.gamepad.start();
 
-    this.game.orientation.onLeft.add(this.moveActivePlayer.bind(this, -1, 0), this);
-    this.game.orientation.onRight.add(this.moveActivePlayer.bind(this, 1, 0), this);
-    this.game.orientation.onUp.add(this.moveActivePlayer.bind(this, 0, -1), this);
-    this.game.orientation.onDown.add(this.moveActivePlayer.bind(this, 0, 1), this);
-
     this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
     this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
 
