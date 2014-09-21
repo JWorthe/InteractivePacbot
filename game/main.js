@@ -7,6 +7,5 @@ window.onload = function () {
   game.state.add('load', require('./states/load'));
   game.state.add('play', require('./states/play'));
   
-
   game.state.start('boot');
 };

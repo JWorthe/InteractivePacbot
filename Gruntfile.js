@@ -1,6 +1,5 @@
 // Generated on 2014-03-28 using generator-phaser-official 0.0.8-rc-2
 'use strict';
-var config = require('./config.json');
 var _ = require('underscore');
 _.str = require('underscore.string');
 
