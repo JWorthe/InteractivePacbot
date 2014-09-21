@@ -1,17 +1,16 @@
 'use strict';
 
 function Load() {
-  this.asset = null;
-  this.ready = false;
+  this.loadingSprite = null;
 }
 
 Load.prototype = {
   preload: function() {
-    this.asset = this.add.sprite(this.width/2,this.height/2, 'preloader');
-    this.asset.anchor.setTo(0.5, 0.5);
+    this.loadingSprite = this.add.sprite(this.game.width/2,this.game.height/2, 'preloader');
+    this.loadingSprite.anchor.setTo(0.5, 0.5);
+    this.load.setPreloadSprite(this.loadingSprite);
 
-    this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
-    this.load.setPreloadSprite(this.asset);
+
     this.load.image('wall', 'assets/images/wall.svg');
     this.load.spritesheet('player-a', 'assets/images/player-a-spritesheet.svg', 100, 100);
     this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
@@ -37,15 +36,7 @@ Load.prototype = {
     this.load.image('keys-b', 'assets/images/keyboard-control-b.svg');
   },
   create: function() {
-    this.asset.cropEnabled = false;
-  },
-  update: function() {
-    if(!!this.ready) {
-      this.game.state.start('play');
-    }
-  },
-  onLoadComplete: function() {
-    this.ready = true;
+    this.game.state.start('play');
   }
 };
 
