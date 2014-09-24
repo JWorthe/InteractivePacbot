@@ -8,7 +8,6 @@ Boot.prototype = {
     this.load.image('preloader', 'assets/images/preloader.gif');
   },
   create: function() {
-    this.game.input.maxPointers = 1;
     this.game.state.start('load');
   }
 };
