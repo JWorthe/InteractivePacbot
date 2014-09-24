@@ -1,9 +1,11 @@
 'use strict';
 
-var Player = function(game, x, y, key, frame, soundKey) {
+var EntityBase = require('../entities/entityBase');
+
+var Player = function(game, x, y, key, soundKey) {
   var player = this;
 
-  Phaser.Sprite.call(this, game, x, y, key, frame);
+  EntityBase.call(this, game, x, y, key);
   this.animations.add('active', [0]);
   this.animations.add('waiting', [1]);
   this.animations.add('activePoison', [2]);
@@ -47,7 +49,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
   };
 };
 
-Player.prototype = Object.create(Phaser.Sprite.prototype);
+Player.prototype = Object.create(EntityBase.prototype);
 Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
@@ -109,10 +111,6 @@ Player.prototype.teleport = function(newX, newY) {
 Player.prototype.finishMovement = function() {
   this.moving = false;
   this.lastTween = null;
-};
-
-Player.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
 };
 
 module.exports = Player;

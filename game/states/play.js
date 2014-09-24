@@ -183,11 +183,11 @@ Play.prototype = {
             this.pills.add(new BonusPill(this.game, x, y));
             break;
           case 'A':
-            this.playerA = new Player(this.game, x, y, 'player-a', 0, 'omSound');
+            this.playerA = new Player(this.game, x, y, 'player-a', 'omSound');
             this.players.add(this.playerA);
             break;
           case 'B':
-            this.playerB = new Player(this.game, x, y, 'player-b', 0, 'nomSound');
+            this.playerB = new Player(this.game, x, y, 'player-b', 'nomSound');
             this.players.add(this.playerB);
             break;
           case '|':

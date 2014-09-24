@@ -1,18 +1,14 @@
 'use strict';
 
-var BonusPill = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'bonus-pill', frame);
-  this.scale = {x: 0.01, y: 0.01};
-  this.anchor = {x: 0.5, y: 0.5};
+var EntityBase = require('../entities/entityBase');
+
+var BonusPill = function(game, x, y) {
+  EntityBase.call(this, game, x, y, 'bonus-pill');
 
   this.score = 10;
 };
 
-BonusPill.prototype = Object.create(Phaser.Sprite.prototype);
+BonusPill.prototype = Object.create(EntityBase.prototype);
 BonusPill.prototype.constructor = BonusPill;
-
-BonusPill.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
-};
 
 module.exports = BonusPill;
