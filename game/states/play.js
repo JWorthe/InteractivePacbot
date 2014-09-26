@@ -7,23 +7,22 @@ var Wall = require('../entities/wall');
 var PoisonPill = require('../entities/poisonPill');
 var Hud = require('../entities/hud');
 
+var CollisionMap = require('../entities/collisionMap')
+
 function Play() {}
 
 Play.prototype = {
   create: function() {
     this.readLevelFile();
+    this.addGameHud();
 
-    this.world.scale = {x:50, y:50};
+    this.world.scale = {x:50, y:50}; //manually tweaked based on size of level file
     this.world.bounds = {x: -425, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
     this.setupPlayerControls();
 
     this.gameWon = false;
-
-    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
-    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
-
   },
   update: function() {
     this.checkForPlayerPillCollisions();
@@ -36,48 +35,120 @@ Play.prototype = {
 
     if (!this.gameWon && this.pills.total === 0) {
       this.gameWon = true;
-      if (this.playerA.score > this.playerB.score) {
-        this.setVictoryText('RED WINS', 'a');
-      }
-      else if (this.playerA.score < this.playerB.score) {
-        this.setVictoryText('YELLOW WINS', 'b');
-      }
-      else {
-        var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
-        this.setVictoryText('DRAW', victoryColor);
-      }
+      this.displayVictoryText();
 
-      var self = this;
-      setTimeout(function() {
-        self.game.state.start('play');
-      }, 5000);
+      this.game.time.events.add(5000, function() {
+        this.game.state.start('play');
+      }, this);
     }
 
     this.pollPlayerInput();
   },
-  addToMap: function(x, y) {
-    if (!this.map) {
-      this.map = [];
-    }
-    if (!this.map[x]) {
-      this.map[x] = [];
+  readLevelFile: function() {
+    this.pills = this.game.add.group();
+    this.players = this.game.add.group();
+    this.walls = this.game.add.group();
+    this.poisonPills = this.game.add.group();
+    this.map = new CollisionMap();
+
+    var levelText = this.game.cache.getText('level');
+    var splitRows = levelText.split('\n');
+
+    for (var y=0; y<splitRows.length; y++) {
+      for (var x=0; x<splitRows[y].length; x++) {
+        switch(splitRows[y][x]) {
+          case '#':
+            this.walls.add(new Wall(this.game, x, y));
+            this.map.addToMap(x, y);
+            break;
+          case '.':
+            this.pills.add(new Pill(this.game, x, y));
+            break;
+          case '*':
+            this.pills.add(new BonusPill(this.game, x, y));
+            break;
+          case 'A':
+            this.playerA = new Player(this.game, x, y, 'player-a', 'omSound');
+            this.players.add(this.playerA);
+            break;
+          case 'B':
+            this.playerB = new Player(this.game, x, y, 'player-b', 'nomSound');
+            this.players.add(this.playerB);
+            break;
+          case '|':
+            this.map.addToMap(x, y);
+            break;
+          }
+      }
     }
 
-    this.map[x][y] = true;
-  },
-  removeFromMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return;
-    }
-    this.map[x][y] = false;
-  },
-  checkMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return false;
-    }
-    return this.map[x][y];
-  },
+    var maxScore = 0;
+    this.pills.forEach(function(pill) {
+      maxScore += pill.score;
+    }, this);
 
+    this.players.forEach(function(player) {
+      player.maxScore = maxScore;
+    }, this);
+
+    this.gameWidth = 0;
+    this.gameHeight = 0;
+    this.walls.forEach(function(wall) {
+      if (wall.x >= this.gameWidth) {
+        this.gameWidth = wall.x+1;
+      }
+      if (wall.y >= this.gameHeight) {
+        this.gameHeight = wall.y+1;
+      }
+    }, this);
+    this.respawnX = Math.ceil(this.gameWidth/2)-1;
+    this.respawnY = Math.ceil(this.gameHeight/2)-1;
+
+    this.playerB.isMyTurn = true;
+  },
+  addGameHud: function() {
+    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
+    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
+  },
+  setupPlayerControls: function() {
+    this.playerBControls = {
+      up: Phaser.Keyboard.W,
+      left: Phaser.Keyboard.A,
+      down: Phaser.Keyboard.S,
+      right: Phaser.Keyboard.D,
+      poison: Phaser.Keyboard.Q
+    };
+    this.playerAControls = {
+      up: Phaser.Keyboard.UP,
+      left: Phaser.Keyboard.LEFT,
+      down: Phaser.Keyboard.DOWN,
+      right: Phaser.Keyboard.RIGHT,
+      poison: Phaser.Keyboard.ENTER
+    };
+    this.controls = {
+      reset: Phaser.Keyboard.ESC
+    };
+
+    function addKeyCaptures(controls, keyboard) {
+      for (var index in controls) {
+        if (controls.hasOwnProperty(index)) {
+          keyboard.addKeyCapture(controls[index]);
+        }
+      }
+    }
+    addKeyCaptures(this.playerAControls, this.game.input.keyboard);
+    addKeyCaptures(this.playerBControls, this.game.input.keyboard);
+    addKeyCaptures(this.controls, this.game.input.keyboard);
+
+    this.game.input.gamepad.start();
+
+    this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
+    this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
+
+    this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
+      this.game.state.start('play');
+    },this);
+  },
   checkForPlayerPillCollisions: function() {
     var pillCollisions = [];
     this.players.forEach(function(player) {
@@ -161,107 +232,8 @@ Play.prototype = {
       this.togglePoisonPill(player);
     }
   },
-  readLevelFile: function() {
-    this.pills = this.game.add.group();
-    this.players = this.game.add.group();
-    this.walls = this.game.add.group();
-    this.poisonPills = this.game.add.group();
-
-    var levelText = this.game.cache.getText('level');
-    var splitRows = levelText.split('\n');
-
-    for (var y=0; y<splitRows.length; y++) {
-      for (var x=0; x<splitRows[y].length; x++) {
-        switch(splitRows[y][x]) {
-          case '#':
-            this.walls.add(new Wall(this.game, x, y));
-            break;
-          case '.':
-            this.pills.add(new Pill(this.game, x, y));
-            break;
-          case '*':
-            this.pills.add(new BonusPill(this.game, x, y));
-            break;
-          case 'A':
-            this.playerA = new Player(this.game, x, y, 'player-a', 'omSound');
-            this.players.add(this.playerA);
-            break;
-          case 'B':
-            this.playerB = new Player(this.game, x, y, 'player-b', 'nomSound');
-            this.players.add(this.playerB);
-            break;
-          case '|':
-            this.addToMap(x, y);
-            break;
-          }
-      }
-    }
-
-    var maxScore = 0;
-    this.pills.forEach(function(pill) {
-      maxScore += pill.score;
-    }, this);
-
-    this.players.forEach(function(player) {
-      player.maxScore = maxScore;
-    }, this);
-
-    this.gameWidth = 0;
-    this.gameHeight = 0;
-    this.walls.forEach(function(wall) {
-      this.addToMap(wall.x, wall.y);
-      if (wall.x >= this.gameWidth) {
-        this.gameWidth = wall.x+1;
-      }
-      if (wall.y >= this.gameHeight) {
-        this.gameHeight = wall.y+1;
-      }
-    }, this);
-    this.respawnX = Math.ceil(this.gameWidth/2)-1;
-    this.respawnY = Math.ceil(this.gameHeight/2)-1;
-
-    this.playerB.isMyTurn = true;
-  },
-
-  setupPlayerControls: function() {
-    this.playerBControls = {
-      up: Phaser.Keyboard.W,
-      left: Phaser.Keyboard.A,
-      down: Phaser.Keyboard.S,
-      right: Phaser.Keyboard.D,
-      poison: Phaser.Keyboard.Q
-    };
-    this.playerAControls = {
-      up: Phaser.Keyboard.UP,
-      left: Phaser.Keyboard.LEFT,
-      down: Phaser.Keyboard.DOWN,
-      right: Phaser.Keyboard.RIGHT,
-      poison: Phaser.Keyboard.ENTER
-    };
-    this.controls = {
-      reset: Phaser.Keyboard.ESC
-    };
-
-    function addKeyCaptures(controls, keyboard) {
-      for (var index in controls) {
-        if (controls.hasOwnProperty(index)) {
-          keyboard.addKeyCapture(controls[index]);
-        }
-      }
-    }
-    addKeyCaptures(this.playerAControls, this.game.input.keyboard);
-    addKeyCaptures(this.playerBControls, this.game.input.keyboard);
-    addKeyCaptures(this.controls, this.game.input.keyboard);
-
-    this.game.input.gamepad.start();
-
-    this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
-    this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
-
-    this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
-      this.game.state.start('play');
-    },this);
-  },
+  
+  
   togglePoisonPill: function(player) {
     if (player.hasPoisonPill) {
       player.poisonPillActive = !player.poisonPillActive;
@@ -283,7 +255,7 @@ Play.prototype = {
     var placePoisonPill = player.hasPoisonPill && player.poisonPillActive && (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
 
     //cannot move into walls, when it isn't your turn, or when you're already moving
-    if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
+    if (this.map.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
       return;
     }
 
@@ -385,6 +357,18 @@ Play.prototype = {
     }
     this.players.sort('isMyTurn');
   },
+  displayVictoryText: function() {
+    if (this.playerA.score > this.playerB.score) {
+      this.setVictoryText('RED WINS', 'a');
+    }
+    else if (this.playerA.score < this.playerB.score) {
+      this.setVictoryText('YELLOW WINS', 'b');
+    }
+    else {
+      var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
+      this.setVictoryText('DRAW', victoryColor);
+    }
+  },
   setVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
     this.victoryText.position.x = (this.world.width/this.world.scale.x)/2 - 8 - this.victoryText.textWidth/2 - 0.5;
@@ -394,11 +378,13 @@ Play.prototype = {
     this.game.input.keyboard.removeKey(this.playerAControls.down);
     this.game.input.keyboard.removeKey(this.playerAControls.left);
     this.game.input.keyboard.removeKey(this.playerAControls.right);
+    this.game.input.keyboard.removeKey(this.playerAControls.poison);
 
     this.game.input.keyboard.removeKey(this.playerBControls.up);
     this.game.input.keyboard.removeKey(this.playerBControls.down);
     this.game.input.keyboard.removeKey(this.playerBControls.left);
     this.game.input.keyboard.removeKey(this.playerBControls.right);
+    this.game.input.keyboard.removeKey(this.playerBControls.poison);
 
     this.game.input.keyboard.removeKey(this.controls.reset);
   }

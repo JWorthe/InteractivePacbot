@@ -7,14 +7,12 @@ var Hud = function(game, player, x, y, scorefontKey, keyboardSpriteKey) {
     this.player = player;
     this.scale = {x: 0.02, y: 0.02};
 
-
     this.background = new Phaser.Sprite(this.game, 0, 0, 'hud-bg');
     this.add(this.background);
     this.scoreText = new Phaser.BitmapText(this.game, 172, 10, scorefontKey, '0', 100);
     this.add(this.scoreText);
 
     this.poisonIndicator = new Phaser.Sprite(this.game, 200, 150, 'poison-pill');
-    //this.poisonIndicator.scale = {0.1, 0.1};
     this.poisonIndicator.anchor = {x:0.5, y:0.5};
     this.add(this.poisonIndicator);
 
