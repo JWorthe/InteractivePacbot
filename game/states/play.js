@@ -54,6 +54,13 @@ Play.prototype = {
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
+    this.gameHeight = splitRows.length;
+    this.gameWidth = splitRows.reduce(function(currentMax, nextRow) {
+      return Math.max(currentMax, nextRow.trim().length);
+    }, 0);
+    
+
+
     for (var y=0; y<splitRows.length; y++) {
       for (var x=0; x<splitRows[y].length; x++) {
         switch(splitRows[y][x]) {
@@ -82,25 +89,16 @@ Play.prototype = {
       }
     }
 
-    var maxScore = 0;
-    this.pills.forEach(function(pill) {
-      maxScore += pill.score;
-    }, this);
+    
+    var totalScore = this.pills.children.reduce(function(score, nextPill) {
+      return score + nextPill.score;
+    }, 0);
+
 
     this.players.forEach(function(player) {
-      player.maxScore = maxScore;
+      player.maxScore = totalScore;
     }, this);
 
-    this.gameWidth = 0;
-    this.gameHeight = 0;
-    this.walls.forEach(function(wall) {
-      if (wall.x >= this.gameWidth) {
-        this.gameWidth = wall.x+1;
-      }
-      if (wall.y >= this.gameHeight) {
-        this.gameHeight = wall.y+1;
-      }
-    }, this);
     this.respawnX = Math.ceil(this.gameWidth/2)-1;
     this.respawnY = Math.ceil(this.gameHeight/2)-1;
 
@@ -142,9 +140,6 @@ Play.prototype = {
 
     this.game.input.gamepad.start();
 
-    this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
-    this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
-
     this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
       this.game.state.start('play');
     },this);
@@ -179,40 +174,46 @@ Play.prototype = {
       this.playerPoisonPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
     }
   },
-  pollPlayerInput: function() {
-    if (this.game.input.gamepad.pad2.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerA);
+  playerPillCollision: function(player, pill) {
+    player.score += pill.score;
+    pill.destroy();
+    player.scoreSound.play();
+  },
+  playerPoisonPillCollision: function(player, poisonPill) {
+    if (player.lastTween) {
+      player.lastTween.onComplete.add(player.teleport.bind(player, this.respawnX, this.respawnY), player);
     }
-    if (this.game.input.gamepad.pad1.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerB);
+    else {
+      player.teleport(this.respawnX, this.respawnY);
     }
 
-    if (this.game.input.keyboard.isDown(this.playerAControls.up)) {
-      this.movePlayer(this.playerA, 0, -1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.down)) {
-      this.movePlayer(this.playerA, 0, 1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.left)) {
-      this.movePlayer(this.playerA, -1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.right)) {
-      this.movePlayer(this.playerA, 1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.up)) {
-      this.movePlayer(this.playerB, 0, -1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.down)) {
-      this.movePlayer(this.playerB, 0, 1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.left)) {
-      this.movePlayer(this.playerB, -1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.right)) {
-      this.movePlayer(this.playerB, 1, 0);
-    }
+    poisonPill.destroy();
+    player.respawnSound.play();
   },
-  pollAnalogStickForPlayer: function(pad, player) {
+  playerPlayerCollision: function(playerA, playerB) {
+    var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
+
+    if (eatenPlayer.lastTween) {
+      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, this.respawnX, this.respawnY), eatenPlayer);
+    }
+    else {
+      eatenPlayer.teleport(this.respawnX, this.respawnY);
+    }
+    eatenPlayer.canBeEaten = false;
+    eatenPlayer.respawnSound.play();
+  },
+  pollPlayerInput: function() {
+    if (this.game.input.gamepad.pad2.connected) {
+      this.pollGamepadForPlayer(this.game.input.gamepad.pad2, this.playerA);
+    }
+    if (this.game.input.gamepad.pad1.connected) {
+      this.pollGamepadForPlayer(this.game.input.gamepad.pad1, this.playerB);
+    }
+
+    this.pollKeyboardForPlayer(this.playerAControls, this.playerA);
+    this.pollKeyboardForPlayer(this.playerBControls, this.playerB);    
+  },
+  pollGamepadForPlayer: function(pad, player) {
     if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.2) {
       this.movePlayer(player, -1, 0);
     }
@@ -232,35 +233,46 @@ Play.prototype = {
       this.togglePoisonPill(player);
     }
   },
-  
+  pollKeyboardForPlayer: function(controls, player) {
+    if (this.game.input.keyboard.isDown(controls.up)) {
+      this.movePlayer(player, 0, -1);
+    }
+    if (this.game.input.keyboard.isDown(controls.down)) {
+      this.movePlayer(player, 0, 1);
+    }
+    if (this.game.input.keyboard.isDown(controls.left)) {
+      this.movePlayer(player, -1, 0);
+    }
+    if (this.game.input.keyboard.isDown(controls.right)) {
+      this.movePlayer(player, 1, 0);
+    }
+
+    var poisonKey = this.game.input.keyboard.addKey(controls.poison);
+    if (poisonKey.isDown && player.keyboardPoisonLastPressed < poisonKey.timeDown) {
+      player.keyboardPoisonLastPressed = poisonKey.timeDown;
+      this.togglePoisonPill(player);
+    }
+  },
   
   togglePoisonPill: function(player) {
     if (player.hasPoisonPill) {
       player.poisonPillActive = !player.poisonPillActive;
     }
   },
-  moveActivePlayer: function(deltaX, deltaY) {
-    var activePlayer = null;
-    for (var i=0; i<this.players.children.length; ++i) {
-      if (this.players.children[i].isMyTurn) {
-        activePlayer = this.players.children[i];
-      }
-    }
-
-    movePlayer(activePlayer, deltaX, deltaY);
-  },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
-    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive && (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
+    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive &&
+        (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
 
     //cannot move into walls, when it isn't your turn, or when you're already moving
     if (this.map.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
       return;
     }
 
+    //special rules about moving around respawn area
     if (Math.abs(newX-this.respawnX)<=1 && Math.abs(newY-this.respawnY)<=1) {
-      //cannot move into respawn area
+      //cannot move into respawn area (only outwards)
       if (Math.abs(newX-this.respawnX)<Math.abs(player.x-this.respawnX) ||
           Math.abs(newY-this.respawnY)<Math.abs(player.y-this.respawnY)) {
         return;
@@ -281,6 +293,7 @@ Play.prototype = {
       player.hasPoisonPill = false;
     }
 
+    //intermediate and teleport are used for a 'multistep' move when wrapping around the screen.
     var intermediateX = newX;
     var teleportX = newX;
     var intermediateY = newY;
@@ -322,34 +335,7 @@ Play.prototype = {
       }, this);
     }
   },
-  playerPillCollision: function(player, pill) {
-    player.score += pill.score;
-    pill.destroy();
-    player.scoreSound.play();
-  },
-  playerPoisonPillCollision: function(player, poisonPill) {
-    if (player.lastTween) {
-      player.lastTween.onComplete.add(player.teleport.bind(player, this.respawnX, this.respawnY), player);
-    }
-    else {
-      player.teleport(this.respawnX, this.respawnY);
-    }
-
-    poisonPill.destroy();
-    player.respawnSound.play();
-  },
-  playerPlayerCollision: function(playerA, playerB) {
-    var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
-
-    if (eatenPlayer.lastTween) {
-      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, this.respawnX, this.respawnY), eatenPlayer);
-    }
-    else {
-      eatenPlayer.teleport(this.respawnX, this.respawnY);
-    }
-    eatenPlayer.canBeEaten = false;
-    eatenPlayer.respawnSound.play();
-  },
+  
   togglePlayerTurn: function() {
     for (var i=0; i<this.players.children.length; ++i) {
       this.players.children[i].isMyTurn = !this.players.children[i].isMyTurn;
@@ -359,34 +345,31 @@ Play.prototype = {
   },
   displayVictoryText: function() {
     if (this.playerA.score > this.playerB.score) {
-      this.setVictoryText('RED WINS', 'a');
+      this.createVictoryText('RED WINS', 'a');
     }
     else if (this.playerA.score < this.playerB.score) {
-      this.setVictoryText('YELLOW WINS', 'b');
+      this.createVictoryText('YELLOW WINS', 'b');
     }
     else {
       var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
-      this.setVictoryText('DRAW', victoryColor);
+      this.createVictoryText('DRAW', victoryColor);
     }
   },
-  setVictoryText: function(newText, winnerLetter) {
+  createVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
     this.victoryText.position.x = (this.world.width/this.world.scale.x)/2 - 8 - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {
-    this.game.input.keyboard.removeKey(this.playerAControls.up);
-    this.game.input.keyboard.removeKey(this.playerAControls.down);
-    this.game.input.keyboard.removeKey(this.playerAControls.left);
-    this.game.input.keyboard.removeKey(this.playerAControls.right);
-    this.game.input.keyboard.removeKey(this.playerAControls.poison);
-
-    this.game.input.keyboard.removeKey(this.playerBControls.up);
-    this.game.input.keyboard.removeKey(this.playerBControls.down);
-    this.game.input.keyboard.removeKey(this.playerBControls.left);
-    this.game.input.keyboard.removeKey(this.playerBControls.right);
-    this.game.input.keyboard.removeKey(this.playerBControls.poison);
-
-    this.game.input.keyboard.removeKey(this.controls.reset);
+    function removeKeyCaptures(controls, keyboard) {
+      for (var index in controls) {
+        if (controls.hasOwnProperty(index)) {
+          keyboard.removeKey(controls[index]);
+        }
+      }
+    }
+    removeKeyCaptures(this.playerAControls, this.game.input.keyboard);
+    removeKeyCaptures(this.playerBControls, this.game.input.keyboard);
+    removeKeyCaptures(this.controls, this.game.input.keyboard);
   }
 };
 
