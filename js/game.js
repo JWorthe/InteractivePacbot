@@ -1,133 +1,112 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-//global variables
-window.onload = function () {
-  var game = new Phaser.Game(1750, 1100, Phaser.AUTO, 'interactive-pacbot');
+var EntityBase = require('../entities/entityBase');
 
-  var Orientation = require('./plugins/orientation');
-  game.orientation = new Orientation();
-
-  // Game States
-  game.state.add('boot', require('./states/boot'));
-  game.state.add('gameover', require('./states/gameover'));
-  game.state.add('menu', require('./states/menu'));
-  game.state.add('play', require('./states/play'));
-  game.state.add('preload', require('./states/preload'));
-  
-
-  game.state.start('boot');
-};
-},{"./plugins/orientation":2,"./states/boot":9,"./states/gameover":10,"./states/menu":11,"./states/play":12,"./states/preload":13}],2:[function(require,module,exports){
-'use strict';
-
-var Orientation = function() {
-	var self = this;
-
-	self.onLeft = new Phaser.Signal();
-	self.onRight = new Phaser.Signal();
-	self.onUp = new Phaser.Signal();
-	self.onDown = new Phaser.Signal();
-
-	self.previousEvent = {
-		gamma: 0,
-		beta: 0
-	};
-
-	self.threshhold = 15;
-
-	if (window.DeviceOrientationEvent) {
-		window.addEventListener('deviceorientation', function(eventData) {
-			if (eventData.gamma < -self.threshhold && self.previousEvent.gamma >= -self.threshhold) {
-				self.onLeft.dispatch();
-			}
-			if (eventData.gamma > self.threshhold && self.previousEvent.gamma <= self.threshhold) {
-				self.onRight.dispatch();
-			}
-			if (eventData.beta < -self.threshhold && self.previousEvent.beta >= -self.threshhold) {
-				self.onUp.dispatch();
-			}
-			if (eventData.beta > self.threshhold && self.previousEvent.beta <= self.threshhold) {
-				self.onDown.dispatch();
-			}
-
-			self.previousEvent.gamma = eventData.gamma;
-			self.previousEvent.beta = eventData.beta;
-		});
-	}
-};
-
-
-module.exports = Orientation;
-
-},{}],3:[function(require,module,exports){
-'use strict';
-
-var BonusPill = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'bonus-pill', frame);
-  this.scale = {x: 0.01, y: 0.01};
-  this.anchor = {x: 0.5, y: 0.5};
+var BonusPill = function(game, x, y) {
+  EntityBase.call(this, game, x, y, 'bonus-pill');
 
   this.score = 10;
 };
 
-BonusPill.prototype = Object.create(Phaser.Sprite.prototype);
+BonusPill.prototype = Object.create(EntityBase.prototype);
 BonusPill.prototype.constructor = BonusPill;
-
-BonusPill.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
-};
 
 module.exports = BonusPill;
 
+},{"../entities/entityBase":3}],2:[function(require,module,exports){
+'use strict';
+
+var CollisionMap = function() {
+  this.map = [];
+};
+
+CollisionMap.prototype = {
+  addToMap: function(x, y) {
+    if (!this.map) {
+      this.map = [];
+    }
+    if (!this.map[x]) {
+      this.map[x] = [];
+    }
+
+    this.map[x][y] = true;
+  },
+  removeFromMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return;
+    }
+    this.map[x][y] = false;
+  },
+  checkMap: function(x,y) {
+    if (!this.map || !this.map[x]) {
+      return false;
+    }
+    return !!this.map[x][y];
+  }
+}
+
+module.exports = CollisionMap;
+},{}],3:[function(require,module,exports){
+'use strict';
+
+var EntityBase = function(game, x, y, key) {
+  Phaser.Sprite.call(this, game, x, y, key);
+  this.scale = {x: 0.01, y: 0.01};
+  this.anchor = {x: 0.5, y: 0.5};
+};
+EntityBase.prototype = Object.create(Phaser.Sprite.prototype);
+
+EntityBase.prototype.getBounds = function() {
+  return new Phaser.Rectangle(this.x, this.y, 0.5, 0.5);
+};
+
+module.exports = EntityBase;
 },{}],4:[function(require,module,exports){
 'use strict';
 
 var Hud = function(game, player, x, y, scorefontKey, keyboardSpriteKey) {
-    Phaser.Group.call(this, game);
-    this.x = x;
-    this.y = y;
-    this.player = player;
-    this.scale = {x: 0.02, y: 0.02};
+  Phaser.Group.call(this, game);
+  this.x = x;
+  this.y = y;
+  this.player = player;
+  this.scale = {x: 0.01, y: 0.01};
 
+  this.background = new Phaser.Sprite(this.game, 0, 0, 'hud-bg');
+  this.add(this.background);
+  this.scoreText = new Phaser.BitmapText(this.game, 344, 20, scorefontKey, '0', 200);
+  this.add(this.scoreText);
 
-    this.background = new Phaser.Sprite(this.game, 0, 0, 'hud-bg');
-    this.add(this.background);
-    this.scoreText = new Phaser.BitmapText(this.game, 172, 10, scorefontKey, '0', 100);
-    this.add(this.scoreText);
+  this.poisonIndicator = new Phaser.Sprite(this.game, 400, 300, 'poison-pill');
+  this.poisonIndicator.scale = {x: 2, y: 2}; //bigger than an actual poison pill
+  this.poisonIndicator.anchor = {x: 0.5, y: 0.5};
+  this.add(this.poisonIndicator);
 
-    this.poisonIndicator = new Phaser.Sprite(this.game, 200, 150, 'poison-pill');
-    //this.poisonIndicator.scale = {0.1, 0.1};
-    this.poisonIndicator.anchor = {x:0.5, y:0.5};
-    this.add(this.poisonIndicator);
+  this.controllerDiagram = new Phaser.Sprite(this.game, 0, 600, 'controller-diagram');
+  this.add(this.controllerDiagram);
 
-    this.controllerDiagram = new Phaser.Sprite(this.game, 0, 300, 'controller-diagram');
-    this.controllerDiagram.scale = {x: 0.5, y: 0.5};
-    this.add(this.controllerDiagram);
+  this.keyboardControls = new Phaser.Sprite(this.game, 0, 1200, keyboardSpriteKey);
+  this.add(this.keyboardControls);
 
-    this.keyboardControls = new Phaser.Sprite(this.game, 0, 600, keyboardSpriteKey);
-    this.keyboardControls.scale = {x: 0.5, y: 0.5};
-    this.add(this.keyboardControls);
-
-    this.currentScore = 0;
+  this.currentScore = 0;
 };
 
 Hud.prototype = Object.create(Phaser.Group.prototype);
 Hud.prototype.constructor = Hud;
 
 Hud.prototype.update = function() {
-    if (this.currentScore !== this.player.score) {
-        this.currentScore = this.player.score;
-        this.scoreText.setText(this.player.score+'');
+  if (this.currentScore !== this.player.score) {
+    this.currentScore = this.player.score;
+    this.scoreText.setText(this.player.score+'');
 
-        var numberOfDigits = Math.floor(Math.log(this.currentScore)/Math.log(10))+1;
-        this.scoreText.x = 200 - numberOfDigits*30;
-    }
+    var numberOfDigits = Math.floor(Math.log(this.currentScore)/Math.log(10))+1;
+    this.scoreText.x = 400 - numberOfDigits*60;
+  }
 
-    if (this.poisonIndicator && !this.player.hasPoisonPill) {
-        this.poisonIndicator.destroy();
-        this.poisonIndicator = null;
-    }
+  if (this.poisonIndicator && !this.player.hasPoisonPill) {
+    this.poisonIndicator.destroy();
+    this.poisonIndicator = null;
+  }
 };
 
 module.exports = Hud;
@@ -135,30 +114,28 @@ module.exports = Hud;
 },{}],5:[function(require,module,exports){
 'use strict';
 
-var Pill = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'pill', frame);
-  this.scale = {x: 0.01, y: 0.01};
-  this.anchor = {x: 0.5, y: 0.5};
+var EntityBase = require('../entities/entityBase');
+
+var Pill = function(game, x, y) {
+  EntityBase.call(this, game, x, y, 'pill');
 
   this.score = 1;
 };
 
-Pill.prototype = Object.create(Phaser.Sprite.prototype);
+Pill.prototype = Object.create(EntityBase.prototype);
 Pill.prototype.constructor = Pill;
-
-Pill.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
-};
 
 module.exports = Pill;
 
-},{}],6:[function(require,module,exports){
+},{"../entities/entityBase":3}],6:[function(require,module,exports){
 'use strict';
 
-var Player = function(game, x, y, key, frame, soundKey) {
+var EntityBase = require('../entities/entityBase');
+
+var Player = function(game, x, y, key, soundKey) {
   var player = this;
 
-  Phaser.Sprite.call(this, game, x, y, key, frame);
+  EntityBase.call(this, game, x, y, key);
   this.animations.add('active', [0]);
   this.animations.add('waiting', [1]);
   this.animations.add('activePoison', [2]);
@@ -182,6 +159,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
   this.hasPoisonPill = true;
   this.poisonPillActive = false;
   this.gamepadPoisonLastPressed = Number.NEGATIVE_INFINITY;
+  this.keyboardPoisonLastPressed = Number.NEGATIVE_INFINITY;
   this.lastTween = null;
 
   this.scoreSound = game.sound.add(soundKey);
@@ -202,7 +180,7 @@ var Player = function(game, x, y, key, frame, soundKey) {
   };
 };
 
-Player.prototype = Object.create(Phaser.Sprite.prototype);
+Player.prototype = Object.create(EntityBase.prototype);
 Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
@@ -266,47 +244,49 @@ Player.prototype.finishMovement = function() {
   this.lastTween = null;
 };
 
-Player.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
-};
-
 module.exports = Player;
 
-},{}],7:[function(require,module,exports){
+},{"../entities/entityBase":3}],7:[function(require,module,exports){
 'use strict';
 
-var PoisonPill = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'poison-pill', frame);
-  this.scale = {x: 0.01, y: 0.01};
-  this.anchor = {x: 0.5, y: 0.5};
+var EntityBase = require('../entities/entityBase');
 
-  this.score = 1;
+var PoisonPill = function(game, x, y) {
+  EntityBase.call(this, game, x, y, 'poison-pill');
 };
 
-PoisonPill.prototype = Object.create(Phaser.Sprite.prototype);
+PoisonPill.prototype = Object.create(EntityBase.prototype);
 PoisonPill.prototype.constructor = PoisonPill;
-
-PoisonPill.prototype.getBounds = function() {
-  return new Phaser.Rectangle(this.x, this.y, 0.2, 0.2);
-};
 
 module.exports = PoisonPill;
 
-},{}],8:[function(require,module,exports){
+},{"../entities/entityBase":3}],8:[function(require,module,exports){
 'use strict';
 
-var Wall = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'wall', frame);
-  this.scale = {x: 0.01, y: 0.01};
-  this.anchor = {x: 0.5, y: 0.5};
+var EntityBase = require('../entities/entityBase');
+
+var Wall = function(game, x, y) {
+  EntityBase.call(this, game, x, y, 'wall');
 };
 
-Wall.prototype = Object.create(Phaser.Sprite.prototype);
+Wall.prototype = Object.create(EntityBase.prototype);
 Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{}],9:[function(require,module,exports){
+},{"../entities/entityBase":3}],9:[function(require,module,exports){
+'use strict';
+
+window.onload = function () {
+  var game = new Phaser.Game(1750, 1100, Phaser.AUTO, 'interactive-pacbot');
+
+  game.state.add('boot', require('./states/boot'));
+  game.state.add('load', require('./states/load'));
+  game.state.add('play', require('./states/play'));
+  
+  game.state.start('boot');
+};
+},{"./states/boot":10,"./states/load":11,"./states/play":12}],10:[function(require,module,exports){
 'use strict';
 
 function Boot() {
@@ -317,74 +297,83 @@ Boot.prototype = {
     this.load.image('preloader', 'assets/images/preloader.gif');
   },
   create: function() {
-    this.game.input.maxPointers = 1;
-    this.game.state.start('preload');
+    this.game.state.start('load');
   }
 };
 
 module.exports = Boot;
 
-},{}],10:[function(require,module,exports){
-'use strict';
-
-function GameOver() {}
-
-GameOver.prototype = {
-  preload: function () {
-  },
-  create: function () {
-  },
-  update: function () {
-  }
-};
-
-module.exports = GameOver;
-
 },{}],11:[function(require,module,exports){
 'use strict';
 
-function Menu() {}
+function Load() {
+  this.loadingSprite = null;
+}
 
-Menu.prototype = {
+Load.prototype = {
   preload: function() {
+    this.loadingSprite = this.add.sprite(this.game.width/2,this.game.height/2, 'preloader');
+    this.loadingSprite.anchor.setTo(0.5, 0.5);
+    this.load.setPreloadSprite(this.loadingSprite);
+
+
+    this.load.image('wall', 'assets/images/wall.svg');
+    this.load.spritesheet('player-a', 'assets/images/player-a-spritesheet.svg', 100, 100);
+    this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
+    this.load.image('pill', 'assets/images/pill.svg');
+    this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
+    this.load.image('poison-pill', 'assets/images/poison-pill.svg');
+
+    this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('omSound', 'assets/audio/om.ogg', true);
+
+    this.load.bitmapFont('spaced-scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt', undefined, 10);
+    this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
+    this.load.audio('nomSound', 'assets/audio/nom.ogg', true);
+
+    this.load.audio('owSound', 'assets/audio/ow.ogg', true);
+
+    this.load.text('level', 'assets/levels/maze.lvl');
+
+    this.load.image('hud-bg', 'assets/images/hud-bg.svg');
+    this.load.image('controller-diagram', 'assets/images/controller-diagram.svg');
+    this.load.image('keys-a', 'assets/images/keyboard-control-a.svg');
+    this.load.image('keys-b', 'assets/images/keyboard-control-b.svg');
   },
   create: function() {
-  },
-  update: function() {
+    this.game.state.start('play');
   }
 };
 
-module.exports = Menu;
+module.exports = Load;
 
 },{}],12:[function(require,module,exports){
 'use strict';
 
-var Player = require('../prefabs/player');
-var Pill = require('../prefabs/pill');
-var BonusPill = require('../prefabs/bonusPill');
-var Wall = require('../prefabs/wall');
-var PoisonPill = require('../prefabs/poisonPill');
-var Hud = require('../prefabs/hud');
+var Player = require('../entities/player');
+var Pill = require('../entities/pill');
+var BonusPill = require('../entities/bonusPill');
+var Wall = require('../entities/wall');
+var PoisonPill = require('../entities/poisonPill');
+var Hud = require('../entities/hud');
+
+var CollisionMap = require('../entities/collisionMap')
 
 function Play() {}
 
 Play.prototype = {
-  preload: function() {
-  },
   create: function() {
     this.readLevelFile();
+    this.addGameHud();
 
-    this.world.scale = {x:50, y:50};
+    this.world.scale = {x:50, y:50}; //manually tweaked based on size of level file
     this.world.bounds = {x: -425, y:-25, width: this.game.width, height: this.game.height};
     this.world.camera.setBoundsToWorld();
 
     this.setupPlayerControls();
 
     this.gameWon = false;
-
-    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
-    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
-
   },
   update: function() {
     this.checkForPlayerPillCollisions();
@@ -397,145 +386,36 @@ Play.prototype = {
 
     if (!this.gameWon && this.pills.total === 0) {
       this.gameWon = true;
-      if (this.playerA.score > this.playerB.score) {
-        this.setVictoryText('RED WINS', 'a');
-      }
-      else if (this.playerA.score < this.playerB.score) {
-        this.setVictoryText('YELLOW WINS', 'b');
-      }
-      else {
-        var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
-        this.setVictoryText('DRAW', victoryColor);
-      }
+      this.displayVictoryText();
 
-      var self = this;
-      setTimeout(function() {
-        self.game.state.start('play');
-      }, 5000);
+      this.game.time.events.add(5000, function() {
+        this.game.state.start('play');
+      }, this);
     }
 
     this.pollPlayerInput();
-  },
-  addToMap: function(x, y) {
-    if (!this.map) {
-      this.map = [];
-    }
-    if (!this.map[x]) {
-      this.map[x] = [];
-    }
-
-    this.map[x][y] = true;
-  },
-  removeFromMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return;
-    }
-    this.map[x][y] = false;
-  },
-  checkMap: function(x,y) {
-    if (!this.map || !this.map[x]) {
-      return false;
-    }
-    return this.map[x][y];
-  },
-
-  checkForPlayerPillCollisions: function() {
-    var pillCollisions = [];
-    this.players.forEach(function(player) {
-      var playerBounds = player.getBounds();
-      this.pills.forEach(function(pill) {
-        var pillBounds = pill.getBounds();
-        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
-          pillCollisions.push({player:player, pill:pill});
-        }
-      }, this);
-    }, this);
-    for (var i=0; i<pillCollisions.length; i++) {
-      this.playerPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
-    }
-  },
-  checkForPlayerPoisonPillCollisions: function() {
-    var pillCollisions = [];
-    this.players.forEach(function(player) {
-      var playerBounds = player.getBounds();
-      this.poisonPills.forEach(function(pill) {
-        var pillBounds = pill.getBounds();
-        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
-          pillCollisions.push({player:player, pill:pill});
-        }
-      }, this);
-    }, this);
-    for (var i=0; i<pillCollisions.length; i++) {
-      this.playerPoisonPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
-    }
-  },
-  pollPlayerInput: function() {
-    if (this.game.input.gamepad.pad2.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad2, this.playerA);
-    }
-    if (this.game.input.gamepad.pad1.connected) {
-      this.pollAnalogStickForPlayer(this.game.input.gamepad.pad1, this.playerB);
-    }
-
-    if (this.game.input.keyboard.isDown(this.playerAControls.up)) {
-      this.movePlayer(this.playerA, 0, -1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.down)) {
-      this.movePlayer(this.playerA, 0, 1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.left)) {
-      this.movePlayer(this.playerA, -1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerAControls.right)) {
-      this.movePlayer(this.playerA, 1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.up)) {
-      this.movePlayer(this.playerB, 0, -1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.down)) {
-      this.movePlayer(this.playerB, 0, 1);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.left)) {
-      this.movePlayer(this.playerB, -1, 0);
-    }
-    if (this.game.input.keyboard.isDown(this.playerBControls.right)) {
-      this.movePlayer(this.playerB, 1, 0);
-    }
-  },
-  pollAnalogStickForPlayer: function(pad, player) {
-    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.2) {
-      this.movePlayer(player, -1, 0);
-    }
-    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.2) {
-      this.movePlayer(player, 1, 0);
-    }
-    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.2) {
-      this.movePlayer(player, 0, -1);
-    }
-    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.2) {
-      this.movePlayer(player, 0, 1);
-    }
-
-    var poisonButton = pad.getButton(Phaser.Gamepad.XBOX360_A);
-    if (poisonButton.isDown && player.gamepadPoisonLastPressed < poisonButton.timeDown) {
-      player.gamepadPoisonLastPressed = poisonButton.timeDown;
-      this.togglePoisonPill(player);
-    }
   },
   readLevelFile: function() {
     this.pills = this.game.add.group();
     this.players = this.game.add.group();
     this.walls = this.game.add.group();
     this.poisonPills = this.game.add.group();
+    this.map = new CollisionMap();
 
     var levelText = this.game.cache.getText('level');
     var splitRows = levelText.split('\n');
 
+    this.gameHeight = splitRows.length;
+    this.gameWidth = splitRows.reduce(function(currentMax, nextRow) {
+      return Math.max(currentMax, nextRow.trim().length);
+    }, 0);
+    
     for (var y=0; y<splitRows.length; y++) {
       for (var x=0; x<splitRows[y].length; x++) {
         switch(splitRows[y][x]) {
           case '#':
             this.walls.add(new Wall(this.game, x, y));
+            this.map.addToMap(x, y);
             break;
           case '.':
             this.pills.add(new Pill(this.game, x, y));
@@ -544,46 +424,37 @@ Play.prototype = {
             this.pills.add(new BonusPill(this.game, x, y));
             break;
           case 'A':
-            this.playerA = new Player(this.game, x, y, 'player-a', 0, 'omSound');
+            this.playerA = new Player(this.game, x, y, 'player-a', 'omSound');
             this.players.add(this.playerA);
             break;
           case 'B':
-            this.playerB = new Player(this.game, x, y, 'player-b', 0, 'nomSound');
+            this.playerB = new Player(this.game, x, y, 'player-b', 'nomSound');
             this.players.add(this.playerB);
             break;
           case '|':
-            this.addToMap(x, y);
+            this.map.addToMap(x, y);
             break;
           }
       }
     }
-
-    var maxScore = 0;
-    this.pills.forEach(function(pill) {
-      maxScore += pill.score;
-    }, this);
+    
+    var totalScore = this.pills.children.reduce(function(score, nextPill) {
+      return score + nextPill.score;
+    }, 0);
 
     this.players.forEach(function(player) {
-      player.maxScore = maxScore;
+      player.maxScore = totalScore;
     }, this);
 
-    this.gameWidth = 0;
-    this.gameHeight = 0;
-    this.walls.forEach(function(wall) {
-      this.addToMap(wall.x, wall.y);
-      if (wall.x >= this.gameWidth) {
-        this.gameWidth = wall.x+1;
-      }
-      if (wall.y >= this.gameHeight) {
-        this.gameHeight = wall.y+1;
-      }
-    }, this);
     this.respawnX = Math.ceil(this.gameWidth/2)-1;
     this.respawnY = Math.ceil(this.gameHeight/2)-1;
 
     this.playerB.isMyTurn = true;
   },
-
+  addGameHud: function() {
+    this.hudA = new Hud(this.game, this.playerA, this.gameWidth-0.5, -0.5, 'spaced-scorefont-a', 'keys-a');
+    this.hudB = new Hud(this.game, this.playerB, -8.5, -0.5, 'spaced-scorefont-b', 'keys-b');
+  },
   setupPlayerControls: function() {
     this.playerBControls = {
       up: Phaser.Keyboard.W,
@@ -616,45 +487,139 @@ Play.prototype = {
 
     this.game.input.gamepad.start();
 
-    this.game.orientation.onLeft.add(this.moveActivePlayer.bind(this, -1, 0), this);
-    this.game.orientation.onRight.add(this.moveActivePlayer.bind(this, 1, 0), this);
-    this.game.orientation.onUp.add(this.moveActivePlayer.bind(this, 0, -1), this);
-    this.game.orientation.onDown.add(this.moveActivePlayer.bind(this, 0, 1), this);
-
-    this.game.input.keyboard.addKey(this.playerBControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerB), this);
-    this.game.input.keyboard.addKey(this.playerAControls.poison).onDown.add(this.togglePoisonPill.bind(this, this.playerA), this);
-
     this.game.input.keyboard.addKey(this.controls.reset).onDown.add(function() {
       this.game.state.start('play');
     },this);
   },
+  checkForPlayerPillCollisions: function() {
+    var pillCollisions = [];
+    this.players.forEach(function(player) {
+      var playerBounds = player.getBounds();
+      this.pills.forEach(function(pill) {
+        var pillBounds = pill.getBounds();
+        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
+          pillCollisions.push({player:player, pill:pill});
+        }
+      }, this);
+    }, this);
+    for (var i=0; i<pillCollisions.length; i++) {
+      this.playerPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
+    }
+  },
+  checkForPlayerPoisonPillCollisions: function() {
+    var pillCollisions = [];
+    this.players.forEach(function(player) {
+      var playerBounds = player.getBounds();
+      this.poisonPills.forEach(function(pill) {
+        var pillBounds = pill.getBounds();
+        if (Phaser.Rectangle.intersects(playerBounds, pillBounds)) {
+          pillCollisions.push({player:player, pill:pill});
+        }
+      }, this);
+    }, this);
+    for (var i=0; i<pillCollisions.length; i++) {
+      this.playerPoisonPillCollision(pillCollisions[i].player, pillCollisions[i].pill);
+    }
+  },
+  playerPillCollision: function(player, pill) {
+    player.score += pill.score;
+    pill.destroy();
+    player.scoreSound.play();
+  },
+  playerPoisonPillCollision: function(player, poisonPill) {
+    if (player.lastTween) {
+      player.lastTween.onComplete.add(player.teleport.bind(player, this.respawnX, this.respawnY), player);
+    }
+    else {
+      player.teleport(this.respawnX, this.respawnY);
+    }
+
+    poisonPill.destroy();
+    player.respawnSound.play();
+  },
+  playerPlayerCollision: function(playerA, playerB) {
+    var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
+
+    if (eatenPlayer.lastTween) {
+      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, this.respawnX, this.respawnY), eatenPlayer);
+    }
+    else {
+      eatenPlayer.teleport(this.respawnX, this.respawnY);
+    }
+    eatenPlayer.canBeEaten = false;
+    eatenPlayer.respawnSound.play();
+  },
+  pollPlayerInput: function() {
+    if (this.game.input.gamepad.pad2.connected) {
+      this.pollGamepadForPlayer(this.game.input.gamepad.pad2, this.playerA);
+    }
+    if (this.game.input.gamepad.pad1.connected) {
+      this.pollGamepadForPlayer(this.game.input.gamepad.pad1, this.playerB);
+    }
+
+    this.pollKeyboardForPlayer(this.playerAControls, this.playerA);
+    this.pollKeyboardForPlayer(this.playerBControls, this.playerB);    
+  },
+  pollGamepadForPlayer: function(pad, player) {
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_LEFT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) < -0.2) {
+      this.movePlayer(player, -1, 0);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_RIGHT) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_X) > 0.2) {
+      this.movePlayer(player, 1, 0);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_UP) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) < -0.2) {
+      this.movePlayer(player, 0, -1);
+    }
+    if (pad.isDown(Phaser.Gamepad.XBOX360_DPAD_DOWN) || pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.2) {
+      this.movePlayer(player, 0, 1);
+    }
+
+    var poisonButton = pad.getButton(Phaser.Gamepad.XBOX360_A);
+    if (poisonButton.isDown && player.gamepadPoisonLastPressed < poisonButton.timeDown) {
+      player.gamepadPoisonLastPressed = poisonButton.timeDown;
+      this.togglePoisonPill(player);
+    }
+  },
+  pollKeyboardForPlayer: function(controls, player) {
+    if (this.game.input.keyboard.isDown(controls.up)) {
+      this.movePlayer(player, 0, -1);
+    }
+    if (this.game.input.keyboard.isDown(controls.down)) {
+      this.movePlayer(player, 0, 1);
+    }
+    if (this.game.input.keyboard.isDown(controls.left)) {
+      this.movePlayer(player, -1, 0);
+    }
+    if (this.game.input.keyboard.isDown(controls.right)) {
+      this.movePlayer(player, 1, 0);
+    }
+
+    var poisonKey = this.game.input.keyboard.addKey(controls.poison);
+    if (poisonKey.isDown && player.keyboardPoisonLastPressed < poisonKey.timeDown) {
+      player.keyboardPoisonLastPressed = poisonKey.timeDown;
+      this.togglePoisonPill(player);
+    }
+  },
+  
   togglePoisonPill: function(player) {
     if (player.hasPoisonPill) {
       player.poisonPillActive = !player.poisonPillActive;
     }
   },
-  moveActivePlayer: function(deltaX, deltaY) {
-    var activePlayer = null;
-    for (var i=0; i<this.players.children.length; ++i) {
-      if (this.players.children[i].isMyTurn) {
-        activePlayer = this.players.children[i];
-      }
-    }
-
-    movePlayer(activePlayer, deltaX, deltaY);
-  },
   movePlayer: function(player, deltaX, deltaY) {
     var newX = player.x + deltaX;
     var newY = player.y + deltaY;
-    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive && (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
+    var placePoisonPill = player.hasPoisonPill && player.poisonPillActive &&
+        (Math.abs(this.respawnX-player.x)>1.1 || Math.abs(this.respawnY-player.y)>1.1);
 
     //cannot move into walls, when it isn't your turn, or when you're already moving
-    if (this.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
+    if (this.map.checkMap(newX, newY) || !player.isMyTurn || player.moving) {
       return;
     }
 
+    //special rules about moving around respawn area
     if (Math.abs(newX-this.respawnX)<=1 && Math.abs(newY-this.respawnY)<=1) {
-      //cannot move into respawn area
+      //cannot move into respawn area (only outwards)
       if (Math.abs(newX-this.respawnX)<Math.abs(player.x-this.respawnX) ||
           Math.abs(newY-this.respawnY)<Math.abs(player.y-this.respawnY)) {
         return;
@@ -675,6 +640,7 @@ Play.prototype = {
       player.hasPoisonPill = false;
     }
 
+    //intermediate and teleport are used for a 'multistep' move when wrapping around the screen.
     var intermediateX = newX;
     var teleportX = newX;
     var intermediateY = newY;
@@ -716,34 +682,7 @@ Play.prototype = {
       }, this);
     }
   },
-  playerPillCollision: function(player, pill) {
-    player.score += pill.score;
-    pill.destroy();
-    player.scoreSound.play();
-  },
-  playerPoisonPillCollision: function(player, poisonPill) {
-    if (player.lastTween) {
-      player.lastTween.onComplete.add(player.teleport.bind(player, this.respawnX, this.respawnY), player);
-    }
-    else {
-      player.teleport(this.respawnX, this.respawnY);
-    }
-
-    poisonPill.destroy();
-    player.respawnSound.play();
-  },
-  playerPlayerCollision: function(playerA, playerB) {
-    var eatenPlayer = playerA.isMyTurn ? playerB : playerA;
-
-    if (eatenPlayer.lastTween) {
-      eatenPlayer.lastTween.onComplete.add(eatenPlayer.teleport.bind(eatenPlayer, this.respawnX, this.respawnY), eatenPlayer);
-    }
-    else {
-      eatenPlayer.teleport(this.respawnX, this.respawnY);
-    }
-    eatenPlayer.canBeEaten = false;
-    eatenPlayer.respawnSound.play();
-  },
+  
   togglePlayerTurn: function() {
     for (var i=0; i<this.players.children.length; ++i) {
       this.players.children[i].isMyTurn = !this.players.children[i].isMyTurn;
@@ -751,79 +690,36 @@ Play.prototype = {
     }
     this.players.sort('isMyTurn');
   },
-  setVictoryText: function(newText, winnerLetter) {
+  displayVictoryText: function() {
+    if (this.playerA.score > this.playerB.score) {
+      this.createVictoryText('RED WINS', 'a');
+    }
+    else if (this.playerA.score < this.playerB.score) {
+      this.createVictoryText('YELLOW WINS', 'b');
+    }
+    else {
+      var victoryColor = this.playerA.isMyTurn ? 'b' : 'a';
+      this.createVictoryText('DRAW', victoryColor);
+    }
+  },
+  createVictoryText: function(newText, winnerLetter) {
     this.victoryText = this.game.add.bitmapText(this.world.width/2/this.world.scale.x, 2, 'scorefont-'+winnerLetter, newText, 2);
     this.victoryText.position.x = (this.world.width/this.world.scale.x)/2 - 8 - this.victoryText.textWidth/2 - 0.5;
   },
   shutdown: function() {
-    this.game.input.keyboard.removeKey(this.playerAControls.up);
-    this.game.input.keyboard.removeKey(this.playerAControls.down);
-    this.game.input.keyboard.removeKey(this.playerAControls.left);
-    this.game.input.keyboard.removeKey(this.playerAControls.right);
-
-    this.game.input.keyboard.removeKey(this.playerBControls.up);
-    this.game.input.keyboard.removeKey(this.playerBControls.down);
-    this.game.input.keyboard.removeKey(this.playerBControls.left);
-    this.game.input.keyboard.removeKey(this.playerBControls.right);
-
-    this.game.input.keyboard.removeKey(this.controls.reset);
+    function removeKeyCaptures(controls, keyboard) {
+      for (var index in controls) {
+        if (controls.hasOwnProperty(index)) {
+          keyboard.removeKey(controls[index]);
+        }
+      }
+    }
+    removeKeyCaptures(this.playerAControls, this.game.input.keyboard);
+    removeKeyCaptures(this.playerBControls, this.game.input.keyboard);
+    removeKeyCaptures(this.controls, this.game.input.keyboard);
   }
 };
 
 module.exports = Play;
 
-},{"../prefabs/bonusPill":3,"../prefabs/hud":4,"../prefabs/pill":5,"../prefabs/player":6,"../prefabs/poisonPill":7,"../prefabs/wall":8}],13:[function(require,module,exports){
-'use strict';
-
-function Preload() {
-  this.asset = null;
-  this.ready = false;
-}
-
-Preload.prototype = {
-  preload: function() {
-    this.asset = this.add.sprite(this.width/2,this.height/2, 'preloader');
-    this.asset.anchor.setTo(0.5, 0.5);
-
-    this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
-    this.load.setPreloadSprite(this.asset);
-    this.load.image('wall', 'assets/images/wall.svg');
-    this.load.spritesheet('player-a', 'assets/images/player-a-spritesheet.svg', 100, 100);
-    this.load.spritesheet('player-b', 'assets/images/player-b-spritesheet.svg', 100, 100);
-    this.load.image('pill', 'assets/images/pill.svg');
-    this.load.image('bonus-pill', 'assets/images/bonus-pill.svg');
-    this.load.image('poison-pill', 'assets/images/poison-pill.svg');
-
-    this.load.bitmapFont('spaced-scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt', undefined, 10);
-    this.load.bitmapFont('scorefont-a', 'assets/fonts/scorefont-a.png', 'assets/fonts/scorefont.fnt');
-    this.load.audio('omSound', 'assets/audio/om.ogg', true);
-
-    this.load.bitmapFont('spaced-scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt', undefined, 10);
-    this.load.bitmapFont('scorefont-b', 'assets/fonts/scorefont-b.png', 'assets/fonts/scorefont.fnt');
-    this.load.audio('nomSound', 'assets/audio/nom.ogg', true);
-
-    this.load.audio('owSound', 'assets/audio/ow.ogg', true);
-
-    this.load.text('level', 'assets/levels/maze.lvl');
-
-    this.load.image('hud-bg', 'assets/images/hud-bg.svg');
-    this.load.image('controller-diagram', 'assets/images/controller-diagram.svg');
-    this.load.image('keys-a', 'assets/images/keyboard-control-a.svg');
-    this.load.image('keys-b', 'assets/images/keyboard-control-b.svg');
-  },
-  create: function() {
-    this.asset.cropEnabled = false;
-  },
-  update: function() {
-    if(!!this.ready) {
-      this.game.state.start('play');
-    }
-  },
-  onLoadComplete: function() {
-    this.ready = true;
-  }
-};
-
-module.exports = Preload;
-
-},{}]},{},[1])
+},{"../entities/bonusPill":1,"../entities/collisionMap":2,"../entities/hud":4,"../entities/pill":5,"../entities/player":6,"../entities/poisonPill":7,"../entities/wall":8}]},{},[9])
