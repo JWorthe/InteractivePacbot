@@ -9,16 +9,15 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="400"
-   height="1100"
-  
+   width="800"
+   height="2200"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="hud-bg.svg">
+   sodipodi:docname="hud-bg.svg"
+   id="svg2997">
   <defs
-     />
+     id="defs2999" />
   <sodipodi:namedview
-    
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
@@ -26,38 +25,39 @@
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
      inkscape:cx="188.15199"
-     inkscape:cy="919.42921"
+     inkscape:cy="2174.4239"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g3005"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     id="namedview3001" />
   <metadata
-    >
+     id="metadata3003">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-    
-     transform="translate(0,47.637817)">
+     transform="translate(0,1147.6378)"
+     id="g3005">
     <rect
-       style="fill:#000000;fill-opacity:1;stroke:#0000ff;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-      
-       width="390"
-       height="1090"
-       x="5"
-       y="-42.637817" />
+       style="fill:#000000;fill-opacity:1;stroke:#0000ff;stroke-width:20;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       width="780"
+       height="2180"
+       x="10"
+       y="-1137.6378"
+       id="rect3007" />
   </g>
 </svg>

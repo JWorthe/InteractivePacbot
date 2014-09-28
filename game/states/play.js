@@ -59,8 +59,6 @@ Play.prototype = {
       return Math.max(currentMax, nextRow.trim().length);
     }, 0);
     
-
-
     for (var y=0; y<splitRows.length; y++) {
       for (var x=0; x<splitRows[y].length; x++) {
         switch(splitRows[y][x]) {
@@ -88,12 +86,10 @@ Play.prototype = {
           }
       }
     }
-
     
     var totalScore = this.pills.children.reduce(function(score, nextPill) {
       return score + nextPill.score;
     }, 0);
-
 
     this.players.forEach(function(player) {
       player.maxScore = totalScore;
